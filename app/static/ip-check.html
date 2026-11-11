@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude AI IP 风险检测 - meetseek AI 工具箱</title>
+  <meta name="description" content="检测当前公网 IP、归属地、浏览器环境、WebRTC 泄漏、域名解析和常用站点分流连通性。">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://tools.meetseek.ai/tools/ip-check">
+  <meta property="og:title" content="IP 分流检测 - meetseek AI 工具箱">
+  <meta property="og:description" content="查看公网 IP、域名解析、WebRTC 泄漏和网站分流连通性。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tools.meetseek.ai/tools/ip-check">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { letter-spacing: 0; }
+    .ad-slot:empty { display: none; }
+    .soft-card { border: 1px solid rgba(226,232,240,.85); background: rgba(255,255,255,.86); box-shadow: 0 18px 60px rgba(15,23,42,.06); backdrop-filter: blur(14px); }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f6f8fb] text-slate-950">
+  <header class="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-md">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4">
+      <a href="https://tools.meetseek.ai/" class="flex min-w-0 items-center gap-3 transition hover:opacity-80">
+        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-orange-600 text-lg font-black text-white">M</span>
+        <span class="truncate text-xl font-black md:text-2xl">meetseek 网络检测</span>
+      </a>
+      <nav class="flex items-center gap-2 text-sm font-bold">
+        <a href="https://tools.meetseek.ai/" class="rounded-full bg-slate-100 px-4 py-2 text-slate-700 transition hover:bg-white">工具箱</a>
+        <a href="https://meetseek.ai/" class="rounded-full bg-slate-950 px-4 py-2 text-white transition hover:bg-orange-600">主站</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-5 py-8">
+    <!-- IP 地址页广告位 1：顶部横幅，在后台广告位中配置 slot = ip_banner -->
+    <div data-ad-slot="ip_banner" class="ad-slot mb-6 overflow-hidden rounded-3xl border border-white/60 bg-white/70"></div>
+
+    <section class="mb-6">
+      <article class="soft-card rounded-[2rem] p-6 md:p-8">
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-sm font-black text-emerald-600">Claude / AI 可用性</p>
+            <h1 class="mt-2 text-4xl font-black tracking-tight md:text-6xl">Claude AI IP 风险检测</h1>
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-500">分别检测本站看到的 IP、海外站看到的 IP、DNS、UDP/WebRTC、可用性和历史安全性，避免把分流线路误判成同一个出口。</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="ip-refresh" class="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-600" type="button">重新检测</button>
+            <button id="ip-copy-report" class="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700" type="button">复制报告</button>
+          </div>
+        </div>
+
+        <div id="claude-risk-board" class="mt-6 grid gap-4 md:grid-cols-3">
+          <div class="h-36 animate-pulse rounded-[1.5rem] bg-slate-100"></div>
+          <div class="h-36 animate-pulse rounded-[1.5rem] bg-slate-100"></div>
+          <div class="h-36 animate-pulse rounded-[1.5rem] bg-slate-100"></div>
+        </div>
+
+        <div id="claude-risk-detail" class="mt-6 grid gap-4 md:grid-cols-3">
+          <div class="h-52 animate-pulse rounded-[1.5rem] bg-slate-100"></div>
+          <div class="h-52 animate-pulse rounded-[1.5rem] bg-slate-100"></div>
+          <div class="h-52 animate-pulse rounded-[1.5rem] bg-slate-100"></div>
+        </div>
+
+        <div class="mt-6 rounded-[1.75rem] border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-white p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+	            <p class="text-xs font-black uppercase tracking-wide text-emerald-700">MeetSeek 看到的 IP</p>
+            <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-slate-500">
+              <input id="ip-hide-toggle" type="checkbox" class="accent-emerald-600">
+              隐藏 IP
+            </label>
+          </div>
+          <div id="ip-current-value" class="mt-4 break-all font-mono text-5xl font-black leading-tight text-slate-950 md:text-7xl">检测中...</div>
+          <div id="ip-current-geo" class="mt-4 text-base font-medium leading-7 text-slate-600">正在读取归属地</div>
+          <div id="ip-basic-tags" class="mt-5 flex flex-wrap gap-2"></div>
+        </div>
+      </article>
+    </section>
+
+    <!-- IP 地址页广告位 2-5：四个豆腐块，在后台分别配置 slot = ip_block_1 / ip_block_2 / ip_block_3 / ip_block_4 -->
+    <section class="mb-6 grid gap-4 md:grid-cols-4">
+      <div data-ad-slot="ip_block_1" class="ad-slot min-h-28 overflow-hidden rounded-3xl border border-white/60 bg-white/70"></div>
+      <div data-ad-slot="ip_block_2" class="ad-slot min-h-28 overflow-hidden rounded-3xl border border-white/60 bg-white/70"></div>
+      <div data-ad-slot="ip_block_3" class="ad-slot min-h-28 overflow-hidden rounded-3xl border border-white/60 bg-white/70"></div>
+      <div data-ad-slot="ip_block_4" class="ad-slot min-h-28 overflow-hidden rounded-3xl border border-white/60 bg-white/70"></div>
+    </section>
+
+    <section class="mb-6 space-y-5">
+        <article class="soft-card rounded-[2rem] p-6">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-xl font-black">网站分流测试</h2>
+              <p class="mt-1 text-sm text-slate-500">从 MeetSeek 服务器向目标站点发起请求，展示状态码和延迟。</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button class="ip-target-preset rounded-full bg-slate-950 px-3 py-1.5 text-xs font-black text-white" data-targets="" type="button">全部</button>
+              <button class="ip-target-preset rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600" data-targets="openai,anthropic,google,github,youtube,telegram" type="button">海外常用</button>
+              <button class="ip-target-preset rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600" data-targets="baidu,qq,bilibili,weibo" type="button">国内常用</button>
+            </div>
+          </div>
+          <div id="ip-probe-summary" class="mb-4 grid gap-3 md:grid-cols-3"></div>
+          <div class="overflow-hidden rounded-2xl border border-slate-100">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-400">
+                <tr>
+                  <th class="px-4 py-3">站点</th>
+                  <th class="px-4 py-3">分类</th>
+                  <th class="px-4 py-3">状态</th>
+                  <th class="px-4 py-3 text-right">延迟</th>
+                </tr>
+              </thead>
+              <tbody id="ip-probe-grid" class="divide-y divide-slate-100 bg-white">
+                <tr><td colspan="4" class="px-4 py-4 text-slate-400">正在测试...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="soft-card rounded-[2rem] p-6">
+          <div class="mb-4">
+            <h2 class="text-xl font-black">查询 IP / 域名</h2>
+            <p class="mt-1 text-sm text-slate-500">输入 IP、域名或 URL，查看解析 IP、IP 版本和归属地。</p>
+          </div>
+          <form id="ip-lookup-form" class="flex flex-col gap-3 sm:flex-row">
+            <input id="ip-lookup-input" class="h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" placeholder="例如：openai.com / 8.8.8.8 / https://example.com">
+            <button class="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-700" type="submit">开始查询</button>
+          </form>
+          <div id="ip-lookup-result" class="mt-4 rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">等待查询。</div>
+        </article>
+      <div class="grid gap-5 lg:grid-cols-3">
+        <article class="soft-card rounded-[2rem] p-6">
+          <h2 class="text-lg font-black">检测状态</h2>
+          <div id="ip-health-summary" class="mt-4 grid gap-3">
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <p class="text-xs font-black text-slate-400">连通状态</p>
+              <p class="mt-1 text-lg font-black text-slate-800">检测中</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="soft-card rounded-[2rem] p-6">
+          <h2 class="text-lg font-black">连接信息</h2>
+          <div id="ip-header-info" class="mt-4 grid gap-3 text-sm text-slate-600">
+            <div class="h-10 animate-pulse rounded-2xl bg-slate-100"></div>
+            <div class="h-10 animate-pulse rounded-2xl bg-slate-100"></div>
+            <div class="h-16 animate-pulse rounded-2xl bg-slate-100"></div>
+          </div>
+        </article>
+
+        <article class="soft-card rounded-[2rem] p-6">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <h2 class="text-lg font-black">浏览器环境</h2>
+            <span class="text-xs text-slate-400">本机侧</span>
+          </div>
+          <div id="ip-browser-info" class="grid gap-3 text-sm">
+            <div class="h-12 animate-pulse rounded-2xl bg-slate-50"></div>
+            <div class="h-12 animate-pulse rounded-2xl bg-slate-50"></div>
+            <div class="h-12 animate-pulse rounded-2xl bg-slate-50"></div>
+          </div>
+        </article>
+
+        <article class="soft-card rounded-[2rem] p-6">
+          <h2 class="text-lg font-black">WebRTC 泄漏检查</h2>
+          <p class="mt-1 text-sm leading-6 text-slate-500">检测浏览器是否暴露本地网络候选地址。现代浏览器通常只会暴露 mDNS 标识。</p>
+          <div id="webrtc-result" class="mt-4 rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">正在检测...</div>
+        </article>
+
+        <article class="soft-card rounded-[2rem] p-6 lg:col-span-3">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-black">代理协议暴露检测</h2>
+              <p class="mt-1 max-w-3xl text-sm leading-6 text-slate-500">检测 Hysteria 2、VLESS REALITY、TUIC、WireGuard、OpenVPN 和 Shadowsocks 的常见端口暴露。加密/伪装协议无法公开强确认，结果以置信度展示。</p>
+            </div>
+            <button id="ip-protocol-refresh" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700" type="button">刷新协议检测</button>
+          </div>
+          <div id="ip-protocol-result" class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div class="h-28 animate-pulse rounded-2xl bg-slate-100"></div>
+            <div class="h-28 animate-pulse rounded-2xl bg-slate-100"></div>
+            <div class="h-28 animate-pulse rounded-2xl bg-slate-100"></div>
+          </div>
+        </article>
+      </div>
+
+	    </section>
+  </main>
+
+  <script>
+	    const $ = (selector) => document.querySelector(selector);
+	    let latestIpCheck = null;
+	    let latestExitComparison = null;
+	    let hideIp = false;
+    let activeTargets = "";
+    let activeProtocolTarget = "";
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function maskIp(ip) {
+      if (!ip || ip === "未知") return ip || "未知";
+      if (ip.includes(":")) {
+        const parts = ip.split(":");
+        return `${parts.slice(0, 2).join(":")}:****:****`;
+      }
+      const parts = ip.split(".");
+      return parts.length === 4 ? `${parts[0]}.${parts[1]}.***.***` : `${ip.slice(0, 3)}***`;
+    }
+
+    function displayIp(ip) {
+      return hideIp ? maskIp(ip) : (ip || "未知");
+    }
+
+    function flagEmoji(code) {
+      const country = String(code || "").toUpperCase();
+      if (!/^[A-Z]{2}$/.test(country)) return "🌐";
+      return country.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+    }
+
+    function shortGeo(geo = {}) {
+      return [geo.country, geo.region, geo.city].filter(Boolean).join(" ") || "Unknown";
+    }
+
+	    function renderExitCard(item, fallbackLabel) {
+	      const geo = item?.geo || {};
+	      const label = item?.label || fallbackLabel;
+	      const note = item?.note || "";
+	      return `
+	        <div class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+	          <p class="text-xs font-black uppercase tracking-wide text-slate-400">${escapeHtml(label)}</p>
+	          <div class="mt-4 flex items-center gap-3">
+	            <span class="text-2xl">${flagEmoji(geo.country_code)}</span>
+	            <b class="break-all font-mono text-2xl text-slate-950">${escapeHtml(displayIp(item?.ip || "未知"))}</b>
+	          </div>
+	          <p class="mt-4 truncate text-sm font-bold text-slate-600">${escapeHtml(shortGeo(geo))}</p>
+	          <p class="mt-1 truncate text-xs font-bold text-slate-400">${escapeHtml(geo.org || "")}</p>
+	          ${note ? `<p class="mt-3 text-xs font-bold leading-5 text-slate-400">${escapeHtml(note)}</p>` : ""}
+	        </div>
+	      `;
+	    }
+
+	    function badge(text, tone = "emerald") {
+	      const tones = {
+	        emerald: "bg-emerald-100 text-emerald-700",
+	        amber: "bg-amber-100 text-amber-700",
+	        rose: "bg-rose-100 text-rose-700",
+	        slate: "bg-slate-100 text-slate-600",
+	      };
+	      return `<span class="rounded-full px-3 py-1 text-xs font-black ${tones[tone] || tones.slate}">${escapeHtml(text)}</span>`;
+	    }
+
+	    function inferIpProperty(geo = {}, security = {}) {
+	      const text = `${geo.org || ""} ${geo.asn || ""}`.toLowerCase();
+	      const country = String(geo.country || "").toLowerCase();
+	      const hasAny = (words) => words.some((word) => text.includes(word));
+	      const broadcastWords = ["cloudflare", "akamai", "fastly", "anycast", "cdn77", "gcore", "edgio"];
+	      const hostingWords = [
+	        "amazon", "aws", "google", "cogent", "digitalocean", "vultr", "linode",
+	        "akamai", "microsoft", "azure", "ovh", "hetzner", "oracle", "leaseweb", "datacamp",
+	        "alibaba", "tencent", "huawei", "zenlayer", "colo", "hosting", "server", "data center",
+	        "datacenter", "data centre", "cloud", "communications", "llc", "inc", "limited",
+	        "global", "network services", "internet services", "rack", "vps", "vapeline",
+	      ];
+	      const residentialWords = [
+	        "telecom", "chinanet", "china telecom", "mobile", "china mobile", "unicom", "comcast",
+	        "verizon", "charter", "vodafone", "orange", "bt", "softbank", "kddi", "ntt",
+	        "sk broadband", "residential", "broadband", "cable", "dsl", "ftth", "fiber",
+	        "fibre", "home", "consumer", "telefonica", "telekom", "telstra", "docomo",
+	      ];
+	      const mobileWords = ["mobile", "cellular", "wireless", "lte", "5g", "4g", "cell"];
+	      if (security.vpn || security.proxy || security.tor) return { label: "代理 IP", tone: "amber" };
+	      if (hasAny(broadcastWords)) return { label: "广播 IP", tone: "slate" };
+	      if (security.hosting) return { label: "机房 IP", tone: "amber" };
+	      if (hasAny(["university", "college", "school", "education", "research", "academy"])) return { label: "机构 IP", tone: "emerald" };
+	      if (hasAny(["government", "gov", "military", "public sector"])) return { label: "机构 IP", tone: "emerald" };
+	      if (hasAny(mobileWords) && ["china", "united states", "japan", "korea", "south korea", "hong kong"].includes(country)) return { label: "移动 IP", tone: "emerald" };
+	      if (hasAny(hostingWords)) return { label: "机房 IP", tone: "amber" };
+	      if (hasAny(residentialWords)) return { label: "家宽 IP", tone: "emerald" };
+	      if (text.trim()) return { label: "公网 IP", tone: "slate" };
+	      return { label: "公网 IP", tone: "slate" };
+	    }
+
+	    function scoreReferenceExit(data) {
+	      const referenceExit = data?.claude_exit?.ip ? data.claude_exit : data?.current;
+	      const security = referenceExit?.security || {};
+	      const property = referenceExit?.property || inferIpProperty(referenceExit?.geo || {}, security);
+	      let score = 82;
+	      const reasons = [];
+	      if (security.vpn) { score -= 25; reasons.push("VPN 风险"); }
+	      if (security.proxy) { score -= 20; reasons.push("代理风险"); }
+	      if (security.tor) { score -= 35; reasons.push("Tor 风险"); }
+	      if (security.crawler) { score -= 12; reasons.push("爬虫特征"); }
+	      if (property.tone === "amber") { score -= 12; reasons.push(property.label); }
+	      if (data?.availability?.ok) score += 8;
+	      else { score -= 18; reasons.push("Claude 连通异常"); }
+	      score = Math.max(0, Math.min(100, score));
+	      const label = score >= 80 ? "纯净" : score >= 60 ? "可用" : score >= 40 ? "偏风险" : "高风险";
+	      return { score, label, reasons: reasons.length ? reasons : ["该出口暂未发现明显风险"], property };
+	    }
+
+    function renderClaudeRisk(data) {
+      const board = $("#claude-risk-board");
+      const detail = $("#claude-risk-detail");
+      if (!data || !board || !detail) return;
+	      board.innerHTML = [
+	        renderExitCard({ ...(data.current || {}), label: "本站看到的 IP", note: "访问 tools.meetseek.ai 时服务端看到的地址。" }, "本站看到的 IP"),
+	        renderExitCard(data.cloudflare_exit, "Cloudflare 看到的 IP"),
+	        renderExitCard(data.claude_exit, "Claude AI 看到的 IP"),
+	      ].join("");
+
+	      const trust = data.trust || scoreReferenceExit(data);
+	      const referenceExit = data.claude_exit?.ip ? data.claude_exit : data.current;
+	      const property = referenceExit?.property || inferIpProperty(referenceExit?.geo || {}, referenceExit?.security || {});
+	      const security = referenceExit?.security || data.current?.security || {};
+      const availability = data.availability || {};
+      const securityRows = [
+        ["VPN", security.vpn ? "检测到" : "未检测到", security.vpn ? "rose" : "emerald"],
+        ["代理 Proxy", security.proxy ? "检测到" : "未检测到", security.proxy ? "rose" : "emerald"],
+        ["Tor", security.tor ? "检测到" : "未检测到", security.tor ? "rose" : "emerald"],
+        ["机器人 Crawler", security.crawler ? "是" : "否", security.crawler ? "amber" : "emerald"],
+        ["滥用记录", (security.vpn || security.proxy || security.tor || security.crawler) ? "需复核" : "未检测到", (security.vpn || security.proxy || security.tor || security.crawler) ? "amber" : "emerald"],
+      ];
+      const availabilityRows = (availability.checks || []).map((item) => `
+        <div class="flex items-center justify-between border-b border-slate-100 py-3 last:border-0">
+          <span class="font-bold text-slate-600">${escapeHtml(item.name)}</span>
+          <span class="flex items-center gap-2">${badge(item.ok ? "正常" : "异常", item.ok ? "emerald" : "rose")}<span class="text-xs font-black text-slate-400">${item.latency_ms == null ? "--" : `${item.latency_ms}ms`}</span></span>
+        </div>
+      `).join("");
+      detail.innerHTML = `
+        <div class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+	          <p class="text-xs font-black uppercase tracking-wide text-slate-400">海外出口信任评分</p>
+          <div class="mt-8 text-center">
+            <span class="font-mono text-4xl font-black text-emerald-700">${escapeHtml(trust.score ?? "--")}</span>
+            ${badge(trust.label || "未知", trust.score >= 80 ? "emerald" : trust.score >= 60 ? "amber" : "rose")}
+            <p class="mt-3 text-sm font-bold text-slate-500">${escapeHtml((trust.reasons || ["该 IP 信誉优异"])[0])}</p>
+          </div>
+          <div class="mt-7 h-2 rounded-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-500">
+            <div class="relative h-2" style="width:${Math.max(0, Math.min(100, Number(trust.score || 0)))}%"><span class="absolute right-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded bg-slate-900"></span></div>
+          </div>
+          <div class="mt-3 flex justify-between text-xs font-bold text-slate-400"><span>高危</span><span>可信</span></div>
+        </div>
+        <div class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+	          <p class="text-xs font-black uppercase tracking-wide text-slate-400">Claude AI 出口 IP 属性</p>
+          <div class="mt-6 space-y-4 text-sm">
+            <div class="flex justify-between gap-3 border-b border-slate-100 pb-3"><span class="text-slate-500">地区</span><b class="text-right text-slate-900">${escapeHtml(shortGeo(data.claude_exit?.geo || data.current?.geo || {}))}</b></div>
+            <div class="flex justify-between gap-3 border-b border-slate-100 pb-3"><span class="text-slate-500">IP 属性</span>${badge(property.label || "公网 IP", property.tone || "slate")}</div>
+            <div class="flex justify-between gap-3 border-b border-slate-100 pb-3"><span class="text-slate-500">ASN</span><b class="text-right text-slate-900">${escapeHtml(data.claude_exit?.geo?.asn || data.current?.geo?.asn || "--")}</b></div>
+            <div class="flex justify-between gap-3"><span class="text-slate-500">运营商</span><b class="max-w-[180px] truncate text-right text-slate-900">${escapeHtml(data.claude_exit?.geo?.org || data.current?.geo?.org || "--")}</b></div>
+          </div>
+        </div>
+        <div class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+	          <p class="text-xs font-black uppercase tracking-wide text-slate-400">Claude AI 出口 IP 安全检测</p>
+          <div class="mt-5 space-y-1 text-sm">
+            ${securityRows.map(([label, value, tone]) => `<div class="flex items-center justify-between border-b border-slate-100 py-2.5 last:border-0"><span class="text-slate-600">${escapeHtml(label)}</span>${badge(value, tone)}</div>`).join("")}
+          </div>
+        </div>
+        <div class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between"><p class="text-xs font-black uppercase tracking-wide text-slate-400">Claude 可用性检测</p><button class="rounded-lg border border-slate-200 px-3 py-1 text-xs font-bold text-slate-500" type="button" onclick="loadClaudeRisk()">刷新</button></div>
+          <div class="mt-5">${availabilityRows || '<p class="text-sm text-slate-400">暂无结果</p>'}</div>
+          <div class="mt-3">${badge(availability.ok ? "全部服务正常" : "存在异常", availability.ok ? "emerald" : "amber")}</div>
+        </div>
+        <div class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <p class="text-xs font-black uppercase tracking-wide text-slate-400">DNS 泄露检测</p>
+          <div class="mt-6 space-y-4 text-sm">
+            <div class="flex justify-between gap-3 border-b border-slate-100 pb-3"><span class="text-slate-500">状态</span>${badge("参考检测", "amber")}</div>
+            <div class="flex justify-between gap-3 border-b border-slate-100 pb-3"><span class="text-slate-500">DNS 出口</span><b class="text-right text-slate-900">${escapeHtml(data.current?.geo?.country || "未知")}</b></div>
+            <p class="text-xs leading-5 text-slate-400">${escapeHtml(data.dns?.message || "")}</p>
+          </div>
+        </div>
+        <div class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <p class="text-xs font-black uppercase tracking-wide text-slate-400">WebRTC UDP 泄露检测</p>
+          <div id="claude-webrtc-mirror" class="mt-6 text-sm text-slate-600">等待浏览器侧检测...</div>
+        </div>
+      `;
+      const mirror = $("#claude-webrtc-mirror");
+      const webrtc = $("#webrtc-result");
+      if (mirror && webrtc) mirror.innerHTML = webrtc.innerHTML;
+    }
+
+	    async function loadClaudeRisk() {
+	      try {
+	        const data = await fetch("/api/ip/claude-risk").then((response) => response.json());
+	        const rendered = await enrichClaudeRiskWithBrowserExit(data);
+	        if (!rendered) {
+	          renderSplitRouteHint(data);
+	          renderClaudeRisk(data);
+	        }
+	      } catch (error) {
+	        const board = $("#claude-risk-board");
+	        if (board) board.innerHTML = `<div class="col-span-full rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-700">Claude 风险检测失败：${escapeHtml(error.message || "未知错误")}</div>`;
+	      }
+	    }
+
+	    function parseCloudflareTrace(text) {
+	      return String(text || "").split("\n").reduce((result, line) => {
+	        const index = line.indexOf("=");
+	        if (index > 0) result[line.slice(0, index)] = line.slice(index + 1);
+	        return result;
+	      }, {});
+	    }
+
+	    async function lookupIpDetails(ip) {
+	      if (!ip) return {};
+	      try {
+	        const data = await fetch(`/api/ip/lookup?target=${encodeURIComponent(ip)}`).then((response) => response.json());
+	        return (data.geo || []).find((item) => item.ip === ip) || {};
+	      } catch {
+	        return {};
+	      }
+	    }
+
+	    async function browserCloudflareExit() {
+	      const text = await fetch("https://www.cloudflare.com/cdn-cgi/trace", { cache: "no-store" }).then((response) => response.text());
+	      const trace = parseCloudflareTrace(text);
+	      if (!trace.ip) return null;
+	      const details = await lookupIpDetails(trace.ip);
+	      return {
+	        ip: trace.ip,
+	        geo: details.geo || {},
+	        security: details.security || {},
+	        property: details.property || {},
+	        label: "Cloudflare 出口 IP",
+	        note: "浏览器直连 Cloudflare 检测，更适合判断本机代理分流。",
+	      };
+	    }
+
+	    async function browserClaudeExit() {
+	      const text = await fetch("https://claude.ai/cdn-cgi/trace", { cache: "no-store" }).then((response) => response.text());
+	      const trace = parseCloudflareTrace(text);
+	      if (!trace.ip) return null;
+	      const details = await lookupIpDetails(trace.ip);
+	      return {
+	        ip: trace.ip,
+	        geo: details.geo || {},
+	        security: details.security || {},
+	        property: details.property || {},
+	        label: "Claude AI 看到的 IP",
+	        note: `浏览器访问 claude.ai 时真实出口，节点 ${trace.colo || "未知"}，地区 ${trace.loc || "未知"}。`,
+	      };
+	    }
+
+	    async function enrichClaudeRiskWithBrowserExit(baseData) {
+	      const [cloudflareExit, browserExit] = await Promise.all([
+	        browserCloudflareExit().catch(() => null),
+	        browserClaudeExit().catch(() => null),
+	      ]);
+	      if (!cloudflareExit && !browserExit) return false;
+	      const data = {
+	        ...baseData,
+	        cloudflare_exit: cloudflareExit || { ...(baseData.cloudflare_exit || {}), note: "浏览器侧检测失败，当前为后端兜底结果。" },
+	        claude_exit: browserExit || { ...(baseData.claude_exit || {}), label: "Claude AI 看到的 IP", note: "浏览器侧 Claude 检测失败，当前为后端兜底结果。" },
+	      };
+	      data.trust = scoreReferenceExit(data);
+	      renderSplitRouteHint(data);
+	      renderClaudeRisk(data);
+	      return true;
+	    }
+
+	    function renderSplitRouteHint(data) {
+	      latestExitComparison = data;
+	      const tagBox = $("#ip-basic-tags");
+	      if (!tagBox || !data?.current?.ip) return;
+	      const exits = [data.cloudflare_exit?.ip, data.claude_exit?.ip].filter(Boolean);
+	      const isSplit = exits.some((ip) => ip && ip !== data.current.ip);
+	      const oldHint = tagBox.querySelector("[data-split-hint]");
+	      if (oldHint) oldHint.remove();
+	      const hint = document.createElement("span");
+	      hint.dataset.splitHint = "true";
+	      hint.className = isSplit
+	        ? "rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700"
+	        : "rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700";
+	      hint.textContent = isSplit ? "检测到分流：本站与海外出口不同" : "未发现明显分流";
+	      tagBox.appendChild(hint);
+	    }
+
+    function runAdScripts(container) {
+      container.querySelectorAll("script").forEach((oldScript) => {
+        const script = document.createElement("script");
+        [...oldScript.attributes].forEach((attr) => script.setAttribute(attr.name, attr.value));
+        script.text = oldScript.text;
+        oldScript.replaceWith(script);
+      });
+    }
+
+    function renderAdSlot(target, config) {
+      const items = (config.items || []).filter((item) => item.html);
+      if (!items.length) return;
+      target.classList.add("p-3");
+      target.innerHTML = `<div class="min-h-24 overflow-hidden rounded-2xl bg-slate-50">${items[0].html}</div>`;
+      runAdScripts(target);
+    }
+
+    function renderAd招商Fallback(target, slot) {
+      const isBanner = slot === "ip_banner";
+      target.classList.add("p-3");
+      target.innerHTML = `
+        <a href="https://tools.meetseek.ai/#advertise"
+           class="group flex ${isBanner ? "min-h-28 flex-col items-start justify-center md:flex-row md:items-center md:justify-between" : "min-h-28 flex-col justify-between"} gap-4 rounded-2xl border border-dashed border-orange-200 bg-gradient-to-br from-orange-50 via-white to-emerald-50 p-5 transition hover:border-orange-300 hover:shadow-sm">
+          <span>
+            <span class="block text-xs font-black uppercase tracking-wide text-orange-600">广告招商</span>
+            <span class="mt-2 block text-lg font-black text-slate-950">${isBanner ? "IP 检测页横幅广告位" : "IP 检测页豆腐块广告位"}</span>
+            <span class="mt-1 block text-sm font-bold leading-6 text-slate-500">${isBanner ? "适合 AI 工具、服务器、代理、安全检测和 SaaS 产品。" : "四宫格展示，适合产品入口、优惠活动或品牌卡片。"}</span>
+          </span>
+          <span class="inline-flex rounded-full bg-slate-950 px-4 py-2 text-sm font-black text-white transition group-hover:bg-orange-600">联系我们</span>
+        </a>
+      `;
+    }
+
+    async function loadAds() {
+      const data = await fetch("/api/settings").then((response) => response.json()).catch(() => ({ ads: {} }));
+      const rendered = new Set();
+      Object.entries(data.ads || {}).forEach(([slot, config]) => {
+        const target = document.querySelector(`[data-ad-slot="${slot}"]`);
+        if (target && config.enabled) {
+          renderAdSlot(target, config);
+          rendered.add(slot);
+        }
+      });
+      document.querySelectorAll("[data-ad-slot^='ip_']").forEach((target) => {
+        const slot = target.dataset.adSlot;
+        if (!rendered.has(slot) && !target.innerHTML.trim()) {
+          renderAd招商Fallback(target, slot);
+        }
+      });
+    }
+
+    function renderBasicIp(me) {
+      const ipValue = $("#ip-current-value");
+      const ipGeo = $("#ip-current-geo");
+      const tagBox = $("#ip-basic-tags");
+      if (!me) {
+        if (ipValue) ipValue.textContent = "检测失败";
+        if (ipGeo) ipGeo.textContent = "无法读取当前 IP 信息";
+        return;
+      }
+      const geo = me.geo || {};
+      const location = [geo.country, geo.region, geo.city].filter(Boolean).join(" · ");
+      const org = [geo.asn, geo.org].filter(Boolean).join(" · ");
+      if (ipValue) ipValue.textContent = displayIp(me.ip);
+      if (ipGeo) ipGeo.textContent = [location || "归属地未知", org].filter(Boolean).join(" ｜ ");
+      if (tagBox) {
+        const tags = [
+          me.version || "未知版本",
+          me.property?.label || "",
+          me.scope === "public" ? "公网地址" : `范围：${me.scope || "未知"}`,
+          geo.timezone?.id || geo.timezone || "",
+          geo.country_code || "",
+	        ].filter(Boolean);
+	        tagBox.innerHTML = tags.map((tag) => `<span class="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-100">${escapeHtml(tag)}</span>`).join("");
+	        if (latestExitComparison) renderSplitRouteHint(latestExitComparison);
+	      }
+	    }
+
+    function renderIpHeaderInfo(headers = {}) {
+      const box = $("#ip-header-info");
+      if (!box) return;
+      const userAgent = headers.user_agent || "未知浏览器";
+      const shortUA = userAgent.length > 96 ? `${userAgent.slice(0, 96)}...` : userAgent;
+      const items = [
+        ["协议", (headers.protocol || "https").toUpperCase()],
+        ["语言", headers.accept_language || "未知"],
+        ["Cloudflare Ray", headers.cf_ray || "无"],
+        ["浏览器", shortUA],
+      ];
+      box.innerHTML = items.map(([label, value]) => `
+        <div class="rounded-2xl bg-slate-50 px-3 py-2">
+          <span class="block text-xs font-bold text-slate-400">${escapeHtml(label)}</span>
+          <b class="mt-1 block break-all text-slate-800">${escapeHtml(value)}</b>
+        </div>
+      `).join("");
+    }
+
+    function renderIpBrowserInfo() {
+      const box = $("#ip-browser-info");
+      if (!box) return;
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "未知";
+      const items = [
+        ["时区", timezone],
+        ["窗口", `${window.innerWidth} × ${window.innerHeight}`],
+        ["屏幕", `${window.screen?.width || "--"} × ${window.screen?.height || "--"}`],
+        ["语言", navigator.language || "未知"],
+        ["平台", navigator.platform || "未知"],
+        ["在线状态", navigator.onLine ? "在线" : "离线"],
+      ];
+      box.innerHTML = items.map(([label, value]) => `
+        <div class="rounded-2xl bg-slate-50 px-3 py-2">
+          <span class="block text-xs font-bold text-slate-400">${escapeHtml(label)}</span>
+          <b class="mt-1 block truncate text-slate-800">${escapeHtml(value)}</b>
+        </div>
+      `).join("");
+    }
+
+    function renderProbeSummary(summary = []) {
+      const box = $("#ip-probe-summary");
+      if (!box) return;
+      box.innerHTML = summary.map((item) => {
+        const ok = item.total && item.ok === item.total;
+        const tone = ok ? "text-emerald-700 bg-emerald-50" : item.ok ? "text-amber-700 bg-amber-50" : "text-rose-700 bg-rose-50";
+        const latency = item.avg_latency_ms == null ? "--" : `${item.avg_latency_ms}ms`;
+        return `
+          <div class="rounded-2xl ${tone} p-4">
+            <div class="flex items-center justify-between gap-2">
+              <b>${escapeHtml(item.category)}</b>
+              <span class="text-xs font-black">${item.ok}/${item.total}</span>
+            </div>
+            <p class="mt-2 font-mono text-lg font-black">${escapeHtml(latency)}</p>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderIpProbes(results = []) {
+      const grid = $("#ip-probe-grid");
+      if (!grid) return;
+      if (!results.length) {
+        grid.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-slate-400">暂无检测结果</td></tr>`;
+        return;
+      }
+      grid.innerHTML = results.map((item) => {
+        const ok = item.status === "ok";
+        const latency = item.latency_ms == null ? "--" : `${item.latency_ms}ms`;
+        const color = ok ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50";
+        return `
+          <tr class="transition hover:bg-slate-50">
+            <td class="px-4 py-3 font-bold text-slate-900">${escapeHtml(item.name)}</td>
+            <td class="px-4 py-3 text-slate-500">${escapeHtml(item.category || "网络")}</td>
+            <td class="px-4 py-3"><span class="rounded-full px-2 py-1 text-xs font-black ${color}">${ok ? "可达" : "异常"} · ${escapeHtml(String(item.status_code || "--"))}</span></td>
+            <td class="px-4 py-3 text-right font-mono font-black text-slate-800">${escapeHtml(latency)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderProtocolExposure(data) {
+      const box = $("#ip-protocol-result");
+      if (!box) return;
+      if (!data?.protocols?.length) {
+        box.innerHTML = `<div class="col-span-full rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-400">暂无协议检测结果</div>`;
+        return;
+      }
+      const statusMeta = {
+        possible: { text: "可能暴露", tone: "amber", dot: "bg-amber-500" },
+        unknown: { text: "未确认", tone: "slate", dot: "bg-slate-400" },
+        not_detected: { text: "未检测到", tone: "emerald", dot: "bg-emerald-500" },
+      };
+      const header = `
+        <div class="md:col-span-2 xl:col-span-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-slate-50 px-4 py-3 text-sm">
+          <span class="font-bold text-slate-500">当前协议检测目标</span>
+          <b class="break-all font-mono text-slate-900">${escapeHtml(displayIp(data.ip || ""))}</b>
+        </div>
+      `;
+      box.innerHTML = header + data.protocols.map((item) => {
+        const meta = statusMeta[item.status] || statusMeta.unknown;
+        const evidence = (item.evidence || []).length ? item.evidence.join(" · ") : "无明确端口响应";
+        return `
+          <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="h-2.5 w-2.5 rounded-full ${meta.dot}"></span>
+                  <b class="text-slate-950">${escapeHtml(item.name)}</b>
+                </div>
+                <p class="mt-1 text-xs font-bold text-slate-400">${escapeHtml(item.transport)} · 置信度 ${escapeHtml(item.confidence || "低")}</p>
+              </div>
+              ${badge(meta.text, meta.tone)}
+            </div>
+            <p class="mt-3 text-sm font-bold text-slate-600">${escapeHtml(item.summary || "")}</p>
+            <p class="mt-2 break-all font-mono text-xs text-slate-400">${escapeHtml(evidence)}</p>
+            <p class="mt-3 line-clamp-2 text-xs leading-5 text-slate-400">${escapeHtml(item.note || "")}</p>
+          </div>
+        `;
+      }).join("") + `
+        <div class="md:col-span-2 xl:col-span-3 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs font-bold leading-5 text-amber-700">
+          ${escapeHtml(data.disclaimer || "")}
+        </div>
+      `;
+    }
+
+    async function loadProtocolExposure(target = "") {
+      const box = $("#ip-protocol-result");
+      if (box) {
+        box.innerHTML = `
+          <div class="h-28 animate-pulse rounded-2xl bg-slate-100"></div>
+          <div class="h-28 animate-pulse rounded-2xl bg-slate-100"></div>
+          <div class="h-28 animate-pulse rounded-2xl bg-slate-100"></div>
+        `;
+      }
+      try {
+        const suffix = target ? `?target=${encodeURIComponent(target)}` : "";
+        const data = await fetch(`/api/ip/protocols${suffix}`).then(async (response) => {
+          const body = await response.json();
+          if (!response.ok) throw new Error(body.detail || "协议检测失败");
+          return body;
+        });
+        renderProtocolExposure(data);
+      } catch (error) {
+        if (box) box.innerHTML = `<div class="col-span-full rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-700">${escapeHtml(error.message || "协议检测失败")}</div>`;
+      }
+    }
+
+    function renderIpHealthSummary(me, probes) {
+      const box = $("#ip-health-summary");
+      if (!box) return;
+      const results = probes?.results || [];
+      const okCount = results.filter((item) => item.status === "ok").length;
+      const latencies = results.map((item) => Number(item.latency_ms)).filter((value) => Number.isFinite(value));
+      const average = latencies.length ? Math.round(latencies.reduce((sum, value) => sum + value, 0) / latencies.length) : null;
+      const statusTone = !results.length ? "text-slate-800" : okCount === results.length ? "text-emerald-700" : okCount ? "text-amber-700" : "text-rose-700";
+      const statusText = !results.length ? "无结果" : okCount === results.length ? "全部可达" : `${okCount}/${results.length} 可达`;
+      const checkedAt = me?.checked_at ? new Date(me.checked_at).toLocaleTimeString("zh-CN", { hour12: false }) : "--";
+      box.innerHTML = `
+        <div class="rounded-2xl bg-slate-50 p-4">
+          <p class="text-xs font-black text-slate-400">连通状态</p>
+          <p class="mt-1 text-lg font-black ${statusTone}">${escapeHtml(statusText)}</p>
+        </div>
+        <div class="rounded-2xl bg-slate-50 p-4">
+          <p class="text-xs font-black text-slate-400">平均延迟</p>
+          <p class="mt-1 font-mono text-lg font-black text-slate-800">${average == null ? "--" : `${average}ms`}</p>
+        </div>
+        <div class="rounded-2xl bg-slate-50 p-4">
+          <p class="text-xs font-black text-slate-400">检测时间</p>
+          <p class="mt-1 text-lg font-black text-slate-800">${escapeHtml(checkedAt)}</p>
+        </div>
+      `;
+    }
+
+    function renderLookupResult(data) {
+      const box = $("#ip-lookup-result");
+      if (!box) return;
+      const rows = (data.addresses || []).map((item) => {
+        const entry = (data.geo || []).find((record) => record.ip === item.ip) || {};
+        const geo = entry.geo || {};
+        const property = entry.property || {};
+        const location = [geo.country, geo.region, geo.city].filter(Boolean).join(" · ") || "未知";
+        const org = [geo.asn, geo.org].filter(Boolean).join(" · ") || "未知";
+        return `
+          <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-100">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <b class="font-mono text-slate-950">${escapeHtml(displayIp(item.ip))}</b>
+              <div class="flex flex-wrap items-center gap-2">
+                ${property.label ? badge(property.label, property.tone || "slate") : ""}
+                <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-black text-slate-600">${escapeHtml(item.version || "")} · ${escapeHtml(item.scope || "")}</span>
+              </div>
+            </div>
+            <p class="mt-2 text-slate-600">${escapeHtml(location)}</p>
+            <p class="mt-1 text-xs font-bold text-slate-400">${escapeHtml(org)}</p>
+            ${property.detail ? `<p class="mt-2 text-xs font-bold text-slate-400">${escapeHtml(property.detail)}</p>` : ""}
+          </div>
+        `;
+      }).join("");
+      box.innerHTML = `
+        <div class="mb-3 text-xs font-black uppercase tracking-wide text-slate-400">${escapeHtml(data.kind === "domain" ? "Domain Resolve" : "IP Lookup")} · ${escapeHtml(data.target)}</div>
+        <div class="grid gap-3">${rows || "<p>无结果</p>"}</div>
+      `;
+    }
+
+    function buildIpReport() {
+      if (!latestIpCheck?.me) return "MeetSeek IP 分流检测：暂无检测结果";
+      const { me, probes } = latestIpCheck;
+      const geo = me.geo || {};
+      const location = [geo.country, geo.region, geo.city].filter(Boolean).join(" / ") || "未知";
+      const org = [geo.asn, geo.org].filter(Boolean).join(" / ") || "未知";
+      const probeLines = (probes?.results || []).map((item) => {
+        const latency = item.latency_ms == null ? "--" : `${item.latency_ms}ms`;
+        return `- ${item.name}: ${item.status === "ok" ? "可达" : "异常"} (${latency}, HTTP ${item.status_code || "--"})`;
+      });
+      return [
+        "MeetSeek IP 分流检测报告",
+        `公网 IP: ${me.ip || "未知"}`,
+        `IP 类型: ${me.version || "未知"} / ${me.scope || "未知"}`,
+        `归属地: ${location}`,
+        `ASN/运营商: ${org}`,
+        `协议: ${(me.headers?.protocol || "").toUpperCase() || "未知"}`,
+        `浏览器语言: ${me.headers?.accept_language || navigator.language || "未知"}`,
+        `本机时区: ${Intl.DateTimeFormat().resolvedOptions().timeZone || "未知"}`,
+        `检测时间: ${new Date(me.checked_at || Date.now()).toLocaleString("zh-CN", { hour12: false })}`,
+        "",
+        "站点连通性:",
+        ...(probeLines.length ? probeLines : ["- 暂无结果"]),
+      ].join("\n");
+    }
+
+    async function loadIpChecker() {
+      const ipValue = $("#ip-current-value");
+      const ipGeo = $("#ip-current-geo");
+      const probeGrid = $("#ip-probe-grid");
+      if (ipValue) ipValue.textContent = "检测中...";
+      if (ipGeo) ipGeo.textContent = "正在读取归属地";
+      if (probeGrid) probeGrid.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-slate-400">正在测试...</td></tr>`;
+      renderIpBrowserInfo();
+
+      const probeUrl = activeTargets ? `/api/ip/probes?targets=${encodeURIComponent(activeTargets)}` : "/api/ip/probes";
+      const [me, probes] = await Promise.all([
+        fetch("/api/ip/me").then((response) => response.json()).catch(() => null),
+        fetch(probeUrl).then((response) => response.json()).catch(() => null),
+      ]);
+
+      latestIpCheck = { me, probes };
+      renderBasicIp(me);
+      renderIpHeaderInfo(me?.headers || {});
+      renderIpHealthSummary(me, probes);
+      renderProbeSummary(probes?.summary || []);
+      renderIpProbes(probes?.results || []);
+    }
+
+    async function runWebrtcCheck() {
+      const box = $("#webrtc-result");
+      if (!box) return;
+      const syncMirror = () => {
+        const mirror = $("#claude-webrtc-mirror");
+        if (mirror) mirror.innerHTML = box.innerHTML;
+      };
+      if (!window.RTCPeerConnection) {
+        box.textContent = "当前浏览器不支持 WebRTC 检测。";
+        syncMirror();
+        return;
+      }
+      const foundIps = new Set();
+      const foundMdns = new Set();
+      const privateIpPattern = /\b(?:10|127)\.\d{1,3}\.\d{1,3}\.\d{1,3}\b|\b192\.168\.\d{1,3}\.\d{1,3}\b|\b172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}\b/ig;
+      const mdnsPattern = /\b[a-z0-9-]+\.local\b/ig;
+      try {
+        const pc = new RTCPeerConnection({ iceServers: [] });
+        pc.createDataChannel("meetcheck");
+        pc.onicecandidate = (event) => {
+          const candidate = event.candidate?.candidate || "";
+          for (const match of candidate.matchAll(privateIpPattern)) foundIps.add(match[0]);
+          for (const match of candidate.matchAll(mdnsPattern)) foundMdns.add(match[0]);
+        };
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        pc.close();
+        if (foundIps.size) {
+          box.innerHTML = `<div class="text-amber-700"><b>检测到本地 IP 候选地址：</b><div class="mt-2 font-mono">${[...foundIps].map(escapeHtml).join("<br>")}</div></div>`;
+        } else if (foundMdns.size) {
+          box.innerHTML = `<span class="font-bold text-emerald-700">未暴露明文本地 IP。</span><p class="mt-1 text-slate-500">浏览器返回的是 mDNS 隐私标识，属于正常保护。</p>`;
+        } else {
+          box.innerHTML = `<span class="font-bold text-emerald-700">未检测到明显本地 IP 泄漏。</span><p class="mt-1 text-slate-500">如果浏览器返回 mDNS，这是现代浏览器的正常隐私保护。</p>`;
+        }
+        syncMirror();
+      } catch (error) {
+        box.textContent = "WebRTC 检测被浏览器阻止或不可用。";
+        syncMirror();
+      }
+    }
+
+    $("#ip-refresh")?.addEventListener("click", loadIpChecker);
+    $("#ip-protocol-refresh")?.addEventListener("click", () => loadProtocolExposure(activeProtocolTarget));
+    $("#ip-hide-toggle")?.addEventListener("change", (event) => {
+      hideIp = event.target.checked;
+      renderBasicIp(latestIpCheck?.me);
+      if ($("#ip-lookup-result")?.dataset.latest) {
+        try { renderLookupResult(JSON.parse($("#ip-lookup-result").dataset.latest)); } catch {}
+      }
+    });
+    document.querySelectorAll(".ip-target-preset").forEach((button) => {
+      button.addEventListener("click", () => {
+        activeTargets = button.dataset.targets || "";
+        document.querySelectorAll(".ip-target-preset").forEach((item) => {
+          item.className = "ip-target-preset rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600";
+        });
+        button.className = "ip-target-preset rounded-full bg-slate-950 px-3 py-1.5 text-xs font-black text-white";
+        loadIpChecker();
+      });
+    });
+    $("#ip-lookup-form")?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const box = $("#ip-lookup-result");
+      const value = $("#ip-lookup-input").value.trim();
+      if (!value) return;
+      if (box) box.textContent = "查询中...";
+      try {
+        const data = await fetch(`/api/ip/lookup?target=${encodeURIComponent(value)}`).then(async (response) => {
+          const body = await response.json();
+          if (!response.ok) throw new Error(body.detail || "查询失败");
+          return body;
+        });
+        if (box) box.dataset.latest = JSON.stringify(data);
+        renderLookupResult(data);
+        activeProtocolTarget = value;
+        loadProtocolExposure(value);
+      } catch (error) {
+        if (box) box.innerHTML = `<span class="font-bold text-rose-600">${escapeHtml(error.message)}</span>`;
+      }
+    });
+    $("#ip-copy-report")?.addEventListener("click", async (event) => {
+      const button = event.currentTarget;
+      const original = button.textContent;
+      try {
+        await navigator.clipboard.writeText(buildIpReport());
+        button.textContent = "已复制";
+        button.classList.add("border-emerald-200", "bg-emerald-50", "text-emerald-700");
+      } catch {
+        button.textContent = "复制失败";
+      }
+      setTimeout(() => {
+        button.textContent = original;
+        button.classList.remove("border-emerald-200", "bg-emerald-50", "text-emerald-700");
+      }, 1600);
+    });
+
+    loadAds();
+    loadClaudeRisk();
+    loadIpChecker();
+    loadProtocolExposure();
+    runWebrtcCheck();
+  </script>
+</body>
+</html>

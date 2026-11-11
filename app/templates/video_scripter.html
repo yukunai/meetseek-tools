@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ meta.title }}</title>
+  <meta name="description" content="{{ meta.description }}">
+  <link rel="canonical" href="{{ meta.canonical_url }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { letter-spacing: 0; }
+    .field { width: 100%; border-radius: 1rem; border: 1px solid rgb(226 232 240); background: rgb(248 250 252 / .82); padding: .85rem 1rem; font-size: .875rem; font-weight: 700; outline: none; transition: .18s ease; }
+    .field:focus { border-color: rgb(251 146 60); background: white; box-shadow: 0 0 0 4px rgb(255 237 213 / .72); }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f8fafc] text-slate-950">
+  <div class="mx-auto flex min-h-screen max-w-7xl gap-6 px-4 py-6">
+    <aside class="hidden w-64 shrink-0 md:block">
+      <div class="sticky top-4 flex h-[calc(100vh-2rem)] flex-col rounded-2xl border border-white/40 bg-white/70 p-4 shadow-sm backdrop-blur-md">
+        <a href="https://meetseek.ai/" class="flex items-center gap-3 rounded-2xl bg-white/60 p-3 transition hover:bg-white/90 hover:opacity-90">
+          <span class="grid h-11 w-11 place-items-center rounded-xl bg-orange-600 text-lg font-black text-white">M</span>
+          <span>
+            <span class="block text-xl font-black">meetseek</span>
+            <span class="block text-xs font-bold text-slate-400">AI 工具箱</span>
+          </span>
+        </a>
+        <nav class="mt-6 grid gap-1 text-sm font-black text-slate-600">
+          <button type="button" data-search-trigger onclick="openSearch()" class="mb-3 flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-100"><span>🔍 搜索内容与工具...</span><kbd class="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-400">⌘ K</kbd></button>
+          <a class="rounded-lg bg-slate-100/70 px-4 py-3 text-slate-900 transition-colors hover:bg-slate-200/70" href="https://meetseek.ai/">🏠 返回主站大本营</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="{{ prompts_base_url }}/">✨ 提示词库</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="{{ tools_base_url }}/">🧰 AI 工具箱</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="/tools/identity-builder">🧬 JSON 身份锁</a>
+          <a class="rounded-lg bg-orange-50 px-4 py-3 text-orange-600 transition-colors hover:bg-orange-100" href="/tools/video-scripter">🎬 视频分镜时间轴</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="/account">👤 会员中心</a>
+        </nav>
+        <div class="mt-auto rounded-2xl border border-white/50 bg-white/60 p-4">
+          <p class="text-xs font-black uppercase tracking-wide text-slate-400">Prompt Format</p>
+          <p class="mt-2 text-sm font-bold leading-6 text-slate-500">输出带时间戳的纯文本，更适合视频模型理解镜头变化。</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="min-w-0 flex-1">
+      <a href="https://meetseek.ai/" class="mb-4 inline-flex items-center gap-1 text-sm font-bold text-slate-400 transition-colors hover:text-slate-700">← 返回主站大本营</a>
+      <section class="mb-6 rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+        <span class="rounded-full bg-orange-100 px-3 py-1 text-xs font-black text-orange-700">Video Keyframe Scripter</span>
+        <h1 class="mt-4 text-4xl font-black leading-tight md:text-5xl">视频分镜提示词时间轴</h1>
+        <p class="mt-4 max-w-3xl text-sm font-bold leading-7 text-slate-500">用全局场景锁和多个时间轴节点，实时生成适合 Seedance、可灵、即梦等视频模型的运镜 Prompt。</p>
+      </section>
+
+      <section class="grid gap-6 lg:grid-cols-[minmax(360px,55%)_minmax(0,45%)]">
+        <section class="grid gap-5">
+          <div class="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-xs font-black uppercase tracking-wide text-orange-600">Base Scene</p>
+                <h2 class="mt-1 text-xl font-black">全局场景锁</h2>
+              </div>
+              <span class="rounded-full bg-slate-50 px-3 py-1 text-xs font-black text-slate-400">全片共用</span>
+            </div>
+            <div class="mt-5 grid gap-4">
+              <label class="text-sm font-black text-slate-700">环境与氛围 Environment
+                <input id="scene-environment" class="field mt-2" value="rainy neon city street at night, cinematic atmosphere" placeholder="例如：雨夜霓虹街道，电影感氛围">
+              </label>
+              <label class="text-sm font-black text-slate-700">核心人物设定 Character Lock
+                <textarea id="scene-character" class="field mt-2 min-h-24 resize-y" placeholder="例如：同一位年轻女性主角，黑色长发，白色外套，神情冷静">same young female protagonist, black long hair, white jacket, calm expression, consistent face identity</textarea>
+              </label>
+            </div>
+          </div>
+
+          <div class="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p class="text-xs font-black uppercase tracking-wide text-orange-600">Timeline Nodes</p>
+                <h2 class="mt-1 text-xl font-black">时间轴节点</h2>
+              </div>
+              <button id="add-node" class="rounded-full bg-slate-950 px-4 py-2 text-sm font-black text-white transition hover:bg-orange-600" type="button">+ 添加分镜节点</button>
+            </div>
+            <div id="timeline-nodes" class="mt-5 grid gap-4"></div>
+          </div>
+        </section>
+
+        <section class="overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/20">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+            <div>
+              <p class="text-xs font-black uppercase tracking-wide text-emerald-300">Prompt Monitor</p>
+              <h2 class="mt-1 text-xl font-black text-white">实时视频提示词</h2>
+            </div>
+            <button id="copy-video-prompt" class="rounded-full bg-emerald-500 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-emerald-400" type="button">一键复制</button>
+          </div>
+          <pre class="max-h-[78vh] min-h-[620px] overflow-auto whitespace-pre-wrap p-5 text-[13px] leading-7 text-emerald-100"><code id="video-prompt-output"></code></pre>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <template id="timeline-node-template">
+    <article class="timeline-node rounded-3xl border border-slate-100 bg-slate-50 p-4" data-node>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2 text-sm font-black text-slate-600">
+          <input class="node-start h-10 w-16 rounded-xl border border-slate-200 bg-white px-3 text-center outline-none focus:border-orange-300" type="number" min="0" step="0.5" value="0">
+          <span>s to</span>
+          <input class="node-end h-10 w-16 rounded-xl border border-slate-200 bg-white px-3 text-center outline-none focus:border-orange-300" type="number" min="0" step="0.5" value="2">
+          <span>s</span>
+        </div>
+        <button class="remove-node rounded-full px-3 py-2 text-sm font-black text-slate-400 transition hover:bg-white hover:text-rose-500" type="button">删除</button>
+      </div>
+      <label class="mt-4 block text-sm font-black text-slate-700">画面动作
+        <input class="node-action field mt-2" value="the protagonist slowly turns her head toward the camera" placeholder="例如：主角转头看向镜头">
+      </label>
+      <label class="mt-4 block text-sm font-black text-slate-700">运镜选择
+        <select class="node-camera field mt-2">
+          <option value="Static">保持静止 (Static)</option>
+          <option value="Slow Push in" selected>缓慢推镜头 (Slow Push in)</option>
+          <option value="Pull out">拉镜头 (Pull out)</option>
+          <option value="Pan left">向左平摇 (Pan left)</option>
+          <option value="Pan right">向右平摇 (Pan right)</option>
+          <option value="Tracking shot">跟随镜头 (Tracking shot)</option>
+        </select>
+      </label>
+    </article>
+  </template>
+
+  <script>
+    (function () {
+      const environment = document.getElementById("scene-environment");
+      const character = document.getElementById("scene-character");
+      const nodes = document.getElementById("timeline-nodes");
+      const template = document.getElementById("timeline-node-template");
+      const addButton = document.getElementById("add-node");
+      const output = document.getElementById("video-prompt-output");
+      const copyButton = document.getElementById("copy-video-prompt");
+
+      function nodeElements() {
+        return Array.from(nodes.querySelectorAll("[data-node]"));
+      }
+
+      function addNode(start, end) {
+        const fragment = template.content.cloneNode(true);
+        const node = fragment.querySelector("[data-node]");
+        node.querySelector(".node-start").value = start;
+        node.querySelector(".node-end").value = end;
+        nodes.appendChild(fragment);
+        bindNode(node);
+        renderPrompt();
+      }
+
+      function bindNode(node) {
+        node.querySelectorAll("input, select").forEach((field) => {
+          field.addEventListener("input", renderPrompt);
+          field.addEventListener("change", renderPrompt);
+        });
+        node.querySelector(".remove-node").addEventListener("click", () => {
+          if (nodeElements().length <= 1) return;
+          node.remove();
+          renderPrompt();
+        });
+      }
+
+      function renderPrompt() {
+        const lines = [
+          `[Base Scene]: ${environment.value.trim()}, ${character.value.trim()}.`,
+          "",
+          "[Timeline & Camera]:"
+        ];
+        nodeElements().forEach((node) => {
+          const start = node.querySelector(".node-start").value || "0";
+          const end = node.querySelector(".node-end").value || "2";
+          const action = node.querySelector(".node-action").value.trim() || "visual action";
+          const camera = node.querySelector(".node-camera").value || "Static";
+          lines.push(`${start}s - ${end}s: ${action}, Camera motion: ${camera}.`);
+        });
+        output.textContent = lines.join("\n");
+      }
+
+      [environment, character].forEach((field) => {
+        field.addEventListener("input", renderPrompt);
+        field.addEventListener("change", renderPrompt);
+      });
+
+      addButton.addEventListener("click", () => {
+        const current = nodeElements();
+        const lastEnd = Number(current.at(-1)?.querySelector(".node-end").value || 2);
+        addNode(lastEnd, lastEnd + 3);
+      });
+
+      copyButton.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(output.textContent);
+        copyButton.textContent = "✅ 已复制";
+        copyButton.classList.add("bg-emerald-400");
+        setTimeout(() => {
+          copyButton.textContent = "一键复制";
+          copyButton.classList.remove("bg-emerald-400");
+        }, 1500);
+      });
+
+      addNode(0, 2);
+    })();
+  </script>
+  {% include "_spotlight_search.html" %}
+</body>
+</html>

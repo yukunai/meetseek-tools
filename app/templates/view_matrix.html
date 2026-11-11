@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ meta.title }}</title>
+  <meta name="description" content="{{ meta.description }}">
+  <link rel="canonical" href="{{ meta.canonical_url }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { letter-spacing: 0; }
+    .field { width: 100%; border-radius: .75rem; border: 1px solid rgb(226 232 240); background: rgb(248 250 252); padding: 1rem; font-size: .95rem; line-height: 1.8; outline: none; transition: .18s ease; }
+    .field:focus { border-color: transparent; background: white; box-shadow: 0 0 0 1px rgb(15 23 42); }
+  </style>
+</head>
+<body class="min-h-screen bg-[radial-gradient(circle_at_top_left,#fff7ed_0,#f8fafc_34%,#eef2ff_100%)] text-slate-950">
+  <div class="mx-auto flex min-h-screen max-w-7xl gap-6 px-4 py-6">
+    <aside class="hidden w-64 shrink-0 md:block">
+      <div class="sticky top-4 flex h-[calc(100vh-2rem)] flex-col rounded-2xl border border-white/40 bg-white/70 p-4 shadow-sm backdrop-blur-md">
+        <a href="https://meetseek.ai/" class="flex items-center gap-3 rounded-2xl bg-white/60 p-3 transition hover:bg-white/90 hover:opacity-90">
+          <span class="grid h-11 w-11 place-items-center rounded-xl bg-orange-600 text-lg font-black text-white">M</span>
+          <span>
+            <span class="block text-xl font-black">meetseek</span>
+            <span class="block text-xs font-bold text-slate-400">AI 工具箱</span>
+          </span>
+        </a>
+        <nav class="mt-6 grid gap-1 text-sm font-black text-slate-600">
+          <button type="button" data-search-trigger onclick="openSearch()" class="mb-3 flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-100"><span>🔍 搜索内容与工具...</span><kbd class="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-400">⌘ K</kbd></button>
+          <a class="rounded-lg bg-slate-100/70 px-4 py-3 text-slate-900 transition-colors hover:bg-slate-200/70" href="https://meetseek.ai/">🏠 返回主站大本营</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="{{ prompts_base_url }}/">✨ 提示词库</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="{{ tools_base_url }}/">🧰 AI 工具箱</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="/tools/identity-builder">🧬 JSON 身份锁</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="/tools/video-scripter">🎬 视频分镜时间轴</a>
+          <a class="rounded-lg bg-orange-50 px-4 py-3 text-orange-600 transition-colors hover:bg-orange-100" href="/tools/view-matrix">🎭 多视角矩阵</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="/account">👤 会员中心</a>
+        </nav>
+        <div class="mt-auto rounded-2xl border border-white/50 bg-white/60 p-4">
+          <p class="text-xs font-black uppercase tracking-wide text-slate-400">Consistency</p>
+          <p class="mt-2 text-sm font-bold leading-6 text-slate-500">用摄影棚机位和光影补丁，减少转头、转身时的角色漂移。</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="min-w-0 flex-1">
+      <a href="https://meetseek.ai/" class="mb-4 inline-flex items-center gap-1 text-sm font-bold text-slate-400 transition-colors hover:text-slate-700">← 返回主站大本营</a>
+      <section class="mb-6 rounded-[2rem] border border-white/60 bg-white/60 p-6 shadow-sm backdrop-blur-md">
+        <h1 class="text-4xl font-black leading-tight md:text-5xl">角色多视角矩阵生成器</h1>
+        <p class="mt-4 max-w-3xl text-sm font-bold leading-7 text-slate-500">输入基础人物锁，切换正脸、3/4 侧颜、纯侧面、背影/回眸，自动拼接摄影棚级视角与光影补丁。</p>
+      </section>
+
+      <section class="flex items-stretch gap-6 max-lg:flex-col">
+        <section class="flex h-full flex-col rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm lg:w-[40%]">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-black uppercase tracking-wide text-orange-600">Base Lock</p>
+              <h2 class="mt-1 text-xl font-black">基础人物设定锁</h2>
+            </div>
+            <span class="rounded-full bg-slate-50 px-3 py-1 text-xs font-black text-slate-400">不要写动作和视角</span>
+          </div>
+          <textarea id="base-character" class="field mt-5 min-h-[420px] flex-1 resize-y" placeholder="例如：25岁亚洲女性，黑色齐肩短发，高颧骨，穿着赛博朋克机能服...（不要写动作和视角）">25-year-old Asian woman, shoulder-length black hair, high cheekbones, clean jawline, wearing a cyberpunk techwear jacket, consistent face identity, realistic skin texture</textarea>
+          <p class="mt-4 text-sm font-bold leading-6 text-slate-400">建议只写不会变化的身份、五官、服装和材质。动作、角度、光影交给右侧视角补丁。</p>
+        </section>
+
+        <section class="flex h-full flex-col overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/20 lg:w-[60%]">
+          <div class="border-b border-white/10 px-5 py-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p class="text-xs font-black uppercase tracking-wide text-emerald-300">Viewpoint Matrix</p>
+                <h2 class="mt-1 text-xl font-black text-white">视角矩阵控制台</h2>
+              </div>
+              <button id="copy-view-prompt" class="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-sm font-black text-emerald-400 transition-colors hover:bg-emerald-500/20" type="button">一键复制</button>
+            </div>
+            <div id="view-tabs" class="mt-5 grid gap-2 sm:grid-cols-4">
+              <button class="view-tab rounded-2xl bg-slate-700 px-3 py-3 text-sm font-black text-white shadow-sm transition" data-view="front" type="button">正脸<br><span class="text-xs font-bold text-slate-300">Front</span></button>
+              <button class="view-tab rounded-2xl bg-transparent px-3 py-3 text-sm font-black text-slate-400 transition hover:bg-slate-800/50 hover:text-slate-200" data-view="threeQuarter" type="button">3/4侧颜<br><span class="text-xs font-bold text-slate-500">3/4 View</span></button>
+              <button class="view-tab rounded-2xl bg-transparent px-3 py-3 text-sm font-black text-slate-400 transition hover:bg-slate-800/50 hover:text-slate-200" data-view="profile" type="button">纯侧面<br><span class="text-xs font-bold text-slate-500">Profile</span></button>
+              <button class="view-tab rounded-2xl bg-transparent px-3 py-3 text-sm font-black text-slate-400 transition hover:bg-slate-800/50 hover:text-slate-200" data-view="back" type="button">背影/回眸<br><span class="text-xs font-bold text-slate-500">Back</span></button>
+            </div>
+          </div>
+          <pre class="min-h-[620px] flex-1 overflow-auto whitespace-pre-wrap p-5 font-mono text-sm leading-relaxed text-slate-300"><code id="view-prompt-output"></code></pre>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const patches = {
+        front: "pure front view, looking directly at viewer, symmetrical facial structure, straight on camera, butterfly lighting, flat frontal light",
+        threeQuarter: "three-quarter portrait, looking slightly away, slight head tilt, visible both eyes but one slightly obscured, Rembrandt lighting, strong chiaroscuro",
+        profile: "pure side profile, 90-degree angle face, looking left/right, visible only one eye, sharp jawline silhouette, rim lighting, edge light, backlit silhouette",
+        back: "from behind, back view, facing away from camera, looking back over shoulder, hair light, dramatic backlight"
+      };
+      const viewLabels = {
+        front: "Front View",
+        threeQuarter: "3/4 Profile",
+        profile: "Pure Profile",
+        back: "Back / Over-the-shoulder"
+      };
+      const base = document.getElementById("base-character");
+      const output = document.getElementById("view-prompt-output");
+      const copyButton = document.getElementById("copy-view-prompt");
+      const tabs = Array.from(document.querySelectorAll(".view-tab"));
+      let currentView = "front";
+
+      function render() {
+        const subject = base.value.trim() || "base character details";
+        output.textContent = [
+          `[View]: ${viewLabels[currentView]}`,
+          `[Subject]: ${subject}`,
+          `[Camera & Angle]: ${patches[currentView]}`,
+          "[Quality]: masterpiece, best quality, cinematic lighting, ultra-detailed, realistic texture, consistent identity",
+          "[Negative]: different face, identity drift, inconsistent bone structure, distorted profile, bad anatomy, over-smoothed skin"
+        ].join("\n");
+      }
+
+      function activateTab(view) {
+        currentView = view;
+        tabs.forEach((tab) => {
+        const active = tab.dataset.view === view;
+        tab.className = active
+            ? "view-tab rounded-2xl bg-slate-700 px-3 py-3 text-sm font-black text-white shadow-sm transition"
+            : "view-tab rounded-2xl bg-transparent px-3 py-3 text-sm font-black text-slate-400 transition hover:bg-slate-800/50 hover:text-slate-200";
+        });
+        render();
+      }
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => activateTab(tab.dataset.view));
+      });
+      base.addEventListener("input", render);
+      copyButton.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(output.textContent);
+        copyButton.textContent = "✅ 已复制";
+        copyButton.classList.add("bg-emerald-500/20");
+        setTimeout(() => {
+          copyButton.textContent = "一键复制";
+          copyButton.classList.remove("bg-emerald-500/20");
+        }, 1500);
+      });
+      render();
+    })();
+  </script>
+  {% include "_spotlight_search.html" %}
+</body>
+</html>

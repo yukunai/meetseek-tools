@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto w-full max-w-3xl">
+  <div class="mb-8">
+    <a href="{{ main_base_url }}/" class="mb-4 inline-flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-slate-900">
+      <svg class="mr-1 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path d="M19 12H5"></path>
+        <path d="m12 19-7-7 7-7"></path>
+      </svg>
+      返回发现
+    </a>
+    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">{{ category.name }}</h1>
+    <p class="mt-2 text-sm text-slate-500">{{ category_description }}</p>
+  </div>
+
+  <div class="grid gap-4">
+    {% if items_html %}
+      {{ items_html | safe }}
+    {% else %}
+      <div class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 py-16 text-center">
+        <div class="grid h-14 w-14 place-items-center rounded-2xl bg-white text-slate-300 shadow-sm ring-1 ring-slate-200">
+          <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path d="M4 7.5 12 3l8 4.5"></path>
+            <path d="M4 7.5 12 12l8-4.5"></path>
+            <path d="M4 7.5V16l8 5 8-5V7.5"></path>
+            <path d="M12 12v9"></path>
+          </svg>
+        </div>
+        <p class="mt-5 text-sm font-black text-slate-700">这个频道还在建设中</p>
+        <p class="mt-2 text-sm text-slate-400">成为第一个在这里分享经验的人。</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{{ interactions_script | safe }}
+{% endblock %}

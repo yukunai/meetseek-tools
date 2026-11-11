@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="{{ lang }}" dir="{{ dir }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ meta.title }}</title>
+  <meta name="description" content="{{ meta.description }}">
+  <link rel="canonical" href="{{ meta.canonical_url }}">
+  <link rel="stylesheet" href="/static/plugin-market.css">
+  <link rel="stylesheet" href="/static/plugin-market-overrides.css?v=20260526-home-scope">
+</head>
+<body class="pm-home">
+  <div class="pm-shell">
+    <aside class="pm-sidebar">
+      <a href="{{ main_base_url }}/" class="pm-brand">
+        <span class="pm-logo">M</span>
+        <b class="pm-brand-text">MEETSEEK</b>
+      </a>
+
+      <nav class="pm-nav">
+        {% for item in nav_items %}
+          <a class="pm-nav-item{% if item.active %} active{% endif %}" href="{{ item.href }}">
+            <span>{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        {% endfor %}
+      </nav>
+
+      <div class="pm-lang">
+        <div class="pm-lang-two">
+          <a class="pm-pill{% if lang == 'zh' %} active{% endif %}" href="{{ zh_url }}">中文</a>
+          <a class="pm-pill{% if lang == 'en' %} active{% endif %}" href="{{ en_url }}">English</a>
+        </div>
+        <label class="sr-only" for="plugin-lang-select">{{ ui.other_languages }}</label>
+        <select id="plugin-lang-select" class="pm-select" onchange="if(this.value) window.location.href='/?lang='+this.value">
+          <option value="">{{ ui.other_languages }}</option>
+          {% for option in other_language_options %}
+            <option value="{{ option.code }}" {% if option.selected %}selected{% endif %}>{{ option.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="pm-creator">
+        <p class="pm-eyebrow">{{ ui.creator_label }}</p>
+        <p class="pm-creator-title">{{ ui.creator_title }}</p>
+        <a class="pm-creator-link" href="/plugins/submit">{{ ui.submit }}</a>
+      </div>
+    </aside>
+
+    <main class="pm-main">
+      <header class="pm-topbar">
+        <div class="pm-mobile-brand">
+          <span class="pm-logo">M</span>
+          <b>MEETSEEK</b>
+        </div>
+        <nav class="pm-topnav">
+          <a class="active" href="/">{{ ui.discover }}</a>
+          <a href="/plugins">{{ ui.all_extensions }}</a>
+          <a href="/plugins{% if lang != 'zh' %}?lang={{ lang }}{% endif %}#categories">{{ ui.categories }}</a>
+          <a href="#trending">{{ ui.top_charts }}</a>
+          <a href="/community">{{ t.community }}</a>
+          <a href="{{ tools_base_url }}">{{ t.tools }}</a>
+        </nav>
+        <div class="pm-top-actions">
+          <a class="pm-search-dot" href="#search">⌕</a>
+          <a class="pm-login" href="/account">{{ signin_label | safe }}</a>
+        </div>
+      </header>
+
+      <section class="pm-hero">
+        <div class="pm-hero-grid">
+          <div>
+            <h1 class="pm-h1">{{ t.hero }}</h1>
+            <p class="pm-sub">{{ t.sub }}</p>
+            <div id="search" class="pm-search">
+              <span>⌕</span>
+              <input placeholder="{{ t.search }}">
+              <button class="pm-button">{{ ui.search_button }}</button>
+            </div>
+            <div id="categories" class="pm-chips">
+              {% for chip in category_chips %}
+                <a class="pm-chip" href="{{ chip.href }}">{{ chip.label }}</a>
+              {% endfor %}
+              <a class="pm-chip" href="{{ tools_base_url }}">{{ t.tools }}</a>
+              <a class="pm-chip" href="{{ prompts_base_url }}">{{ t.prompts }}</a>
+            </div>
+          </div>
+
+          <div class="pm-float" aria-hidden="true">
+            <div class="pm-cube a">🧩</div>
+            <div class="pm-cube b">🛡️</div>
+            <div class="pm-cube c">⚡</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="pm-section-wrap">
+        <section>
+          <div class="pm-section-head">
+            <h2 class="pm-section-title">{{ t.featured }}</h2>
+            <a class="pm-view" href="#">{{ ui.view_all }}</a>
+          </div>
+          <div class="pm-grid">
+            {% for item in featured_items %}
+              {% include "plugin_home_card.html" %}
+            {% endfor %}
+          </div>
+        </section>
+
+        <section id="trending" class="pm-panel">
+          <div class="pm-section-head">
+            <h2 class="pm-section-title">{{ t.trending }}</h2>
+            <a class="pm-view" href="#">{{ ui.view_all }}</a>
+          </div>
+          <div class="pm-trending">
+            {% for item in trending_items %}
+              <a href="{{ item.href }}" class="pm-row">
+                <span class="pm-rank">{{ loop.index }}</span>
+                <span class="pm-row-main">
+                  <span class="pm-row-icon {{ item.accent_class }}">{{ item.icon }}</span>
+                  <span class="pm-row-text">
+                    <b class="pm-row-title">{{ item.title }}</b>
+                    <small class="pm-row-desc">{{ item.desc }}</small>
+                  </span>
+                </span>
+                <span class="pm-badge">{{ item.category_label }}</span>
+                <span class="pm-stars">★ {{ item.rating }}</span>
+              </a>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section id="new">
+          <div class="pm-section-head">
+            <h2 class="pm-section-title">{{ t.new }}</h2>
+            <a class="pm-view" href="#">{{ ui.view_all }}</a>
+          </div>
+          <div class="pm-grid">
+            {% for item in new_items %}
+              {% include "plugin_home_card.html" %}
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="pm-editor">
+          <p class="pm-eyebrow">{{ ui.editor_picks }}</p>
+          <h2>{{ ui.workflow_title }}</h2>
+          <p>{{ ui.workflow_desc }}</p>
+          <div class="pm-actions">
+            <a class="pm-action-light" href="{{ tools_base_url }}">{{ t.tools }}</a>
+            <a class="pm-action-dark" href="{{ prompts_base_url }}">{{ t.prompts }}</a>
+            <a class="pm-action-dark" href="/community">{{ t.community }}</a>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

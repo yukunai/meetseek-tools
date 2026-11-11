@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ meta.title }}</title>
+  <meta name="description" content="{{ meta.description }}">
+  <link rel="canonical" href="{{ meta.canonical_url }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { letter-spacing: 0; }
+    .geo-field { border: 1px solid rgb(226 232 240); background: rgba(248, 250, 252, .86); outline: none; transition: .18s ease; }
+    .geo-field:focus { border-color: rgb(15 23 42); box-shadow: 0 0 0 4px rgba(15, 23, 42, .06); background: #fff; }
+    .tool-btn { display: inline-flex; align-items: center; gap: .3rem; border-radius: .55rem; padding: .32rem .45rem; font-size: .8rem; font-weight: 800; color: rgb(71 85 105); transition: .16s ease; white-space: nowrap; }
+    .tool-btn:hover { background: rgb(248 250 252); color: rgb(194 65 12); }
+    .component-btn { min-height: 0; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f6f7fb] text-slate-950">
+  <header class="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
+    <div class="mx-auto flex max-w-[1680px] items-center justify-between gap-4 px-4 py-3">
+      <a href="{{ tools_base_url }}/" class="flex items-center gap-3">
+        <span class="grid h-10 w-10 place-items-center rounded-xl bg-orange-600 text-lg font-black text-white">M</span>
+        <span>
+          <span class="block text-lg font-black leading-none">meetseek 工具箱</span>
+          <span class="mt-1 block text-xs font-bold text-slate-400">公众号 GEO 排版</span>
+        </span>
+      </a>
+      <nav class="hidden items-center gap-2 text-sm font-black text-slate-600 md:flex">
+        <a class="rounded-full bg-slate-100 px-4 py-2 transition hover:bg-slate-200" href="{{ main_base_url }}/">返回主站</a>
+        <a class="rounded-full px-4 py-2 transition hover:bg-slate-100" href="{{ tools_base_url }}/">AI 工具箱</a>
+        <a class="rounded-full px-4 py-2 transition hover:bg-slate-100" href="{{ prompts_base_url }}/">提示词库</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="w-full px-4 py-6">
+    <section class="mb-5 rounded-[2rem] border border-white/70 bg-white/70 p-5 shadow-sm backdrop-blur-md">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="text-xs font-black uppercase tracking-[.24em] text-orange-600">WeChat GEO Editor</p>
+          <h1 class="mt-3 text-3xl font-black leading-tight text-slate-950 md:text-5xl">微信公众号排版工作台</h1>
+          <p class="mt-3 max-w-4xl text-sm font-bold leading-7 text-slate-500">编辑区内可直接插入组件、图片、加粗、代码、符号和颜色；中间按公众号宽度实时预览；底部查看 RAG 切片和 GEO 分析。</p>
+        </div>
+        <div class="rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 to-emerald-50 px-4 py-3 text-sm font-black text-slate-700">微信轨 + AI 轨双导出</div>
+      </div>
+    </section>
+
+    <section class="grid gap-5 overflow-x-auto xl:grid-cols-[minmax(750px,1fr)_minmax(750px,1fr)]">
+      <section class="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-md">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-black uppercase tracking-wider text-slate-400">Editor</p>
+            <h2 class="mt-1 text-2xl font-black text-slate-950">编辑区</h2>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="optimize-btn" class="rounded-full bg-slate-950 px-4 py-2 text-sm font-black text-white transition hover:bg-orange-600" type="button">一键分析</button>
+            <button id="save-btn" class="rounded-full bg-orange-600 px-4 py-2 text-sm font-black text-white transition hover:bg-orange-700" type="button">保存草稿</button>
+            <button id="clear-btn" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 transition hover:border-red-100 hover:bg-red-50 hover:text-red-600" type="button">清空内容</button>
+          </div>
+        </div>
+
+        <label class="mt-5 block text-sm font-black text-slate-700">文章标题</label>
+        <input id="article-title" class="geo-field mt-2 w-full rounded-2xl px-4 py-3 text-2xl font-black text-slate-950" placeholder="输入公众号文章标题">
+
+        <div class="sticky top-[76px] z-20 mt-5 rounded-2xl border border-slate-200/70 bg-white/95 p-2 shadow-sm backdrop-blur-xl">
+          <label class="block px-1 text-sm font-black text-slate-700">正文内容</label>
+          <div class="mt-1 flex flex-wrap items-center gap-1">
+            <button class="component-btn tool-btn" type="button" data-insert="qa">问答组件</button>
+            <button class="component-btn tool-btn" type="button" data-insert="data">数据卡片</button>
+            <button class="component-btn tool-btn" type="button" data-insert="anchor">观点锚点</button>
+            <button class="component-btn tool-btn" type="button" data-insert="context">上下文</button>
+            <span class="mx-1 h-5 w-px bg-slate-200"></span>
+            <button id="bold-btn" class="tool-btn" type="button">B 加粗</button>
+            <button id="code-btn" class="tool-btn" type="button">代码块</button>
+            <button id="symbol-btn" class="tool-btn" type="button">符号</button>
+            <label class="tool-btn cursor-pointer">
+              <span>图片</span>
+              <input id="image-input" type="file" accept="image/*" class="hidden">
+            </label>
+            <label class="tool-btn cursor-pointer">
+              <span>颜色</span>
+              <input id="color-input" type="color" value="#f97316" class="h-6 w-8 cursor-pointer rounded border-0 bg-transparent p-0">
+            </label>
+          </div>
+        </div>
+        <textarea id="article-content" class="geo-field mt-2 min-h-[72vh] w-full resize-y rounded-3xl p-5 text-base font-medium leading-8 text-slate-700" placeholder="粘贴或撰写公众号正文。支持 **加粗**、[color=#f97316]彩色文字[/color]、```代码块```、![图片说明](图片地址)。"></textarea>
+
+        <label class="mt-5 block text-sm font-black text-slate-700">隐形上下文（可选，只写入 AI 轨导出）</label>
+        <textarea id="context-note" class="geo-field mt-2 min-h-20 w-full resize-y rounded-2xl p-4 text-sm font-bold leading-7 text-slate-600" placeholder="例如：本段数据仅适用于 2026 年华东市场；引用时需要说明样本范围。"></textarea>
+
+        <p id="editor-message" class="mt-3 min-h-5 text-sm font-bold text-slate-400"></p>
+      </section>
+
+      <section class="rounded-[2rem] border border-white/70 bg-slate-100/70 p-4 shadow-sm backdrop-blur-md">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-3 px-2">
+          <div>
+            <p class="text-xs font-black uppercase tracking-wider text-slate-400">WeChat Preview</p>
+            <h2 class="mt-1 text-xl font-black text-slate-950">公众号实时预览</h2>
+          </div>
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <button id="copy-wechat-btn" class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-black text-white transition hover:bg-emerald-700" type="button">复制至公众号</button>
+            <button id="copy-ai-btn" class="rounded-full bg-slate-900 px-4 py-2 text-sm font-black text-white transition hover:bg-slate-800" type="button">复制 AI 轨</button>
+            <button id="copy-md-btn" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50" type="button">复制 Markdown</button>
+            <span class="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500">750px</span>
+          </div>
+        </div>
+        <article id="wechat-preview" class="min-h-[86vh] w-full rounded-[1.6rem] border border-slate-200 bg-white px-8 py-8 shadow-sm"></article>
+      </section>
+    </section>
+
+    <section class="mt-5 grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)_360px]">
+      <section class="rounded-[2rem] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur-md">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-black text-slate-950">GEO / RAG 看板</h2>
+          <span id="analyze-state" class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-500">待分析</span>
+        </div>
+        <div class="mt-5 grid grid-cols-2 gap-3">
+          <div class="rounded-2xl bg-slate-50 p-4"><p class="text-xs font-black text-slate-400">GEO 评分</p><p id="geo-score" class="mt-2 text-3xl font-black text-orange-600">--</p></div>
+          <div class="rounded-2xl bg-slate-50 p-4"><p class="text-xs font-black text-slate-400">Token 估算</p><p id="token-count" class="mt-2 text-3xl font-black text-slate-950">--</p></div>
+        </div>
+        <div class="mt-4"><div class="flex justify-between text-xs font-black text-slate-400"><span>信息增益 / 语义密度</span><span id="density-value">--</span></div><div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div id="density-bar" class="h-full w-0 rounded-full bg-emerald-500 transition-all"></div></div></div>
+        <div class="mt-4"><div class="flex justify-between text-xs font-black text-slate-400"><span>噪声清洗度</span><span id="noise-value">--</span></div><div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div id="noise-bar" class="h-full w-0 rounded-full bg-blue-500 transition-all"></div></div></div>
+      </section>
+
+      <section class="rounded-[2rem] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur-md">
+        <h3 class="text-base font-black text-slate-950">RAG 切片模拟预览</h3>
+        <p class="mt-1 text-xs font-bold text-slate-400">模拟 300 Tokens / 50 重叠切片</p>
+        <div id="chunk-list" class="mt-4 grid max-h-72 gap-3 overflow-auto pr-1 md:grid-cols-2"></div>
+      </section>
+
+      <section class="rounded-[2rem] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur-md">
+        <h3 class="text-base font-black text-slate-950">优化建议</h3>
+        <ul id="suggestion-list" class="mt-4 space-y-2 text-sm font-bold leading-6 text-slate-500"></ul>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const title = document.getElementById("article-title");
+      const content = document.getElementById("article-content");
+      const context = document.getElementById("context-note");
+      const message = document.getElementById("editor-message");
+      const state = document.getElementById("analyze-state");
+      const preview = document.getElementById("wechat-preview");
+      const imageInput = document.getElementById("image-input");
+      let latestExports = null;
+      let timer = null;
+
+      const snippets = {
+        qa: "## 这个问题的直接答案是什么？\n\n先用 100 字以内给出结论。随后补充原因、数据来源和适用边界。\n\n",
+        data: "### 结构化数据卡片\n\n指标：\n时间范围：\n样本来源：\n核心结论：\n适用限制：\n\n",
+        anchor: "### 核心观点锚点\n\n观点：\n证据：\n可引用表述：\n\n",
+        context: "【AI 隐形上下文】本段内容的适用范围、时间、地区或数据口径是：\n\n"
+      };
+
+      function payload() {
+        return { title: title.value.trim(), content: content.value.trim(), context_note: context.value.trim() };
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
+      }
+
+      function inlineFormat(value) {
+        let safe = escapeHtml(value);
+        safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong class="font-black text-slate-950">$1</strong>');
+        safe = safe.replace(/\[color=(#[0-9a-fA-F]{3,6}|[a-zA-Z]+)\](.+?)\[\/color\]/g, '<span style="color:$1" class="font-bold">$2</span>');
+        return safe;
+      }
+
+      function selectedText(fallback) {
+        const start = content.selectionStart || 0;
+        const end = content.selectionEnd || start;
+        return { start, end, text: content.value.slice(start, end) || fallback };
+      }
+
+      function insertText(text) {
+        const start = content.selectionStart || content.value.length;
+        const end = content.selectionEnd || start;
+        content.value = content.value.slice(0, start) + text + content.value.slice(end);
+        content.focus();
+        content.selectionStart = content.selectionEnd = start + text.length;
+        content.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+
+      function replaceSelection(wrapper) {
+        const sel = selectedText("文字");
+        const next = wrapper(sel.text);
+        content.value = content.value.slice(0, sel.start) + next + content.value.slice(sel.end);
+        content.focus();
+        content.selectionStart = sel.start;
+        content.selectionEnd = sel.start + next.length;
+        content.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+
+      function toggleSelection(wrapper, unwrapper, fallback) {
+        const sel = selectedText(fallback || "文字");
+        const unwrapped = unwrapper(sel.text);
+        const next = unwrapped === null ? wrapper(sel.text) : unwrapped;
+        content.value = content.value.slice(0, sel.start) + next + content.value.slice(sel.end);
+        content.focus();
+        content.selectionStart = sel.start;
+        content.selectionEnd = sel.start + next.length;
+        content.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+
+      function unwrapBold(text) {
+        const match = text.match(/^\*\*([\s\S]+)\*\*$/);
+        return match ? match[1] : null;
+      }
+
+      function unwrapCodeBlock(text) {
+        const match = text.match(/^```(?:[a-zA-Z0-9_-]+)?\n?([\s\S]+?)\n?```$/);
+        return match ? match[1] : null;
+      }
+
+      function unwrapColor(text) {
+        const match = text.match(/^\[color=(#[0-9a-fA-F]{3,6}|[a-zA-Z]+)\]([\s\S]+)\[\/color\]$/);
+        return match ? match[2] : null;
+      }
+
+      function renderPreview() {
+        const heading = escapeHtml(title.value.trim() || "未命名公众号文章");
+        const blocks = content.value.replace(/\r\n/g, "\n").split(/\n{2,}/).map((item) => item.trim()).filter(Boolean);
+        const body = blocks.map((block) => {
+          const image = block.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+          if (image) {
+            return `<figure class="my-6 text-center"><img src="${escapeHtml(image[2])}" alt="${escapeHtml(image[1] || "公众号配图")}" class="mx-auto w-full rounded-2xl border border-slate-100 object-cover"><figcaption class="mt-2 text-xs font-bold text-slate-400">${escapeHtml(image[1] || "公众号配图")}</figcaption></figure>`;
+          }
+          const code = block.match(/^```(?:[a-zA-Z0-9_-]+)?\n?([\s\S]+?)\n?```$/);
+          if (code) {
+            return `<pre class="my-5 overflow-auto rounded-2xl bg-slate-950 p-4 text-sm leading-7 text-emerald-100">${escapeHtml(code[1])}</pre>`;
+          }
+          if (/^#{1,3}\s+/.test(block)) {
+            return `<h2 class="mb-3 mt-8 border-l-4 border-orange-500 pl-3 text-xl font-black leading-snug text-slate-950">${inlineFormat(block.replace(/^#{1,3}\s+/, ""))}</h2>`;
+          }
+          if (/^([-*]\s+.+\n?)+$/.test(block)) {
+            const items = block.split("\n").map((line) => line.replace(/^[-*]\s+/, "").trim()).filter(Boolean);
+            return `<ul class="my-4 list-disc space-y-1 pl-6 text-base font-medium leading-8 text-slate-700">${items.map((item) => `<li>${inlineFormat(item)}</li>`).join("")}</ul>`;
+          }
+          if (/^[^：:\n]{1,12}[：:]/.test(block) && block.includes("\n")) {
+            return `<section class="my-5 whitespace-pre-wrap rounded-2xl border border-orange-100 bg-orange-50/60 p-4 text-sm font-bold leading-7 text-slate-700">${inlineFormat(block)}</section>`;
+          }
+          return `<p class="my-4 whitespace-pre-wrap text-base font-medium leading-8 text-slate-700">${inlineFormat(block)}</p>`;
+        }).join("");
+        preview.innerHTML = `<h1 class="mb-5 text-[26px] font-black leading-snug text-slate-950">${heading}</h1><section class="mb-6 rounded-2xl border border-orange-100 bg-orange-50/70 px-4 py-3 text-sm font-bold leading-7 text-orange-800">AI 摘要区域会在导出时自动生成，公众号复制版会保留内联样式。</section>${body || '<p class="rounded-2xl bg-slate-50 p-5 text-sm font-bold text-slate-400">左侧输入正文后，这里会实时展示接近公众号宽度的预览。</p>'}`;
+      }
+
+      function setMessage(text, tone) {
+        message.textContent = text || "";
+        message.className = "mt-3 min-h-5 text-sm font-bold " + (tone === "error" ? "text-red-500" : tone === "ok" ? "text-emerald-600" : "text-slate-400");
+      }
+
+      function setBar(id, value) {
+        document.getElementById(id).style.width = Math.max(0, Math.min(100, value || 0)) + "%";
+      }
+
+      function renderAnalysis(data) {
+        const analysis = data.analysis || data;
+        document.getElementById("geo-score").textContent = analysis.geo_score ?? "--";
+        document.getElementById("token-count").textContent = analysis.token_count ?? "--";
+        document.getElementById("density-value").textContent = (analysis.semantic_density ?? "--") + (analysis.semantic_density == null ? "" : "%");
+        document.getElementById("noise-value").textContent = (analysis.noise_score ?? "--") + (analysis.noise_score == null ? "" : "%");
+        setBar("density-bar", analysis.semantic_density || 0);
+        setBar("noise-bar", analysis.noise_score || 0);
+        document.getElementById("chunk-list").innerHTML = (analysis.chunks || []).map((chunk) => `<article class="rounded-2xl border border-slate-100 bg-slate-50 p-3"><div class="flex items-center justify-between text-xs font-black text-slate-400"><span>块 ${chunk.index}</span><span>${chunk.tokens} Tokens</span></div><p class="mt-2 line-clamp-3 text-xs font-bold leading-5 text-slate-600">${escapeHtml(chunk.text || "")}</p></article>`).join("") || '<p class="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-400">开始输入正文后显示切片。</p>';
+        document.getElementById("suggestion-list").innerHTML = (analysis.suggestions || []).map((item) => `<li class="rounded-2xl bg-slate-50 px-3 py-2">• ${escapeHtml(item)}</li>`).join("");
+      }
+
+      async function analyze() {
+        if (!content.value.trim()) {
+          renderAnalysis({ analysis: { chunks: [], suggestions: ["先输入正文，系统会实时模拟切片和评分。"] } });
+          return;
+        }
+        state.textContent = "分析中";
+        state.className = "rounded-full bg-orange-50 px-2.5 py-1 text-xs font-black text-orange-600";
+        try {
+          const res = await fetch("/api/wechat-geo/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload()) });
+          if (!res.ok) throw new Error(await res.text());
+          renderAnalysis(await res.json());
+          state.textContent = "已更新";
+          state.className = "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-black text-emerald-600";
+        } catch (err) {
+          state.textContent = "失败";
+          state.className = "rounded-full bg-red-50 px-2.5 py-1 text-xs font-black text-red-500";
+        }
+      }
+
+      function debounceAnalyze() {
+        window.clearTimeout(timer);
+        renderPreview();
+        timer = window.setTimeout(analyze, 420);
+      }
+
+      async function exportDraft() {
+        if (!content.value.trim()) {
+          setMessage("请先输入正文。", "error");
+          return null;
+        }
+        setMessage("正在生成双轨代码...", "");
+        const res = await fetch("/api/wechat-geo/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload()) });
+        if (!res.ok) {
+          setMessage("导出失败，请稍后再试。", "error");
+          return null;
+        }
+        const data = await res.json();
+        latestExports = data.exports;
+        renderAnalysis(data.analysis);
+        setMessage(`已保存草稿 #${data.draft_id}，后台可查看。`, "ok");
+        return latestExports;
+      }
+
+      async function copyText(text, button) {
+        if (!text) return;
+        await navigator.clipboard.writeText(text);
+        const old = button.textContent;
+        button.textContent = "✅ 已复制";
+        window.setTimeout(() => { button.textContent = old; }, 1500);
+      }
+
+      async function copyExport(kind, button) {
+        if (!latestExports) latestExports = await exportDraft();
+        if (!latestExports) return;
+        const map = { wechat: "wechat_html", ai: "ai_html", markdown: "markdown" };
+        await copyText(latestExports[map[kind]], button);
+      }
+
+      document.querySelectorAll(".component-btn").forEach((button) => {
+        button.addEventListener("click", () => insertText(snippets[button.dataset.insert] || ""));
+      });
+      document.getElementById("bold-btn").addEventListener("click", () => toggleSelection((text) => `**${text}**`, unwrapBold, "加粗文字"));
+      document.getElementById("code-btn").addEventListener("click", () => toggleSelection((text) => `\`\`\`\n${text}\n\`\`\``, unwrapCodeBlock, "代码内容"));
+      document.getElementById("symbol-btn").addEventListener("click", () => insertText(" ✓ "));
+      document.getElementById("color-input").addEventListener("change", (event) => toggleSelection((text) => `[color=${event.target.value}]${text}[/color]`, unwrapColor, "彩色文字"));
+      imageInput.addEventListener("change", async () => {
+        const file = imageInput.files && imageInput.files[0];
+        if (!file) return;
+        setMessage("正在上传图片...", "");
+        const form = new FormData();
+        form.append("image", file);
+        try {
+          const res = await fetch("/api/wechat-geo/upload-image", { method: "POST", body: form });
+          if (!res.ok) throw new Error(await res.text());
+          const data = await res.json();
+          insertText(`\n\n![${data.alt || "公众号配图"}](${data.url})\n\n`);
+          setMessage("图片已插入。", "ok");
+        } catch (err) {
+          setMessage("图片上传失败。", "error");
+        } finally {
+          imageInput.value = "";
+        }
+      });
+
+      [title, content, context].forEach((item) => item.addEventListener("input", debounceAnalyze));
+      document.getElementById("optimize-btn").addEventListener("click", analyze);
+      document.getElementById("save-btn").addEventListener("click", exportDraft);
+      document.getElementById("clear-btn").addEventListener("click", () => {
+        title.value = "";
+        content.value = "";
+        context.value = "";
+        latestExports = null;
+        state.textContent = "待分析";
+        state.className = "rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-500";
+        document.getElementById("geo-score").textContent = "--";
+        document.getElementById("token-count").textContent = "--";
+        document.getElementById("density-value").textContent = "--";
+        document.getElementById("noise-value").textContent = "--";
+        document.getElementById("density-bar").style.width = "0%";
+        document.getElementById("noise-bar").style.width = "0%";
+        document.getElementById("chunk-list").innerHTML = "";
+        document.getElementById("suggestion-list").innerHTML = "";
+        renderPreview();
+        setMessage("内容已清空。", "ok");
+      });
+      document.getElementById("copy-wechat-btn").addEventListener("click", (event) => copyExport("wechat", event.currentTarget));
+      document.getElementById("copy-ai-btn").addEventListener("click", (event) => copyExport("ai", event.currentTarget));
+      document.getElementById("copy-md-btn").addEventListener("click", (event) => copyExport("markdown", event.currentTarget));
+
+      title.value = "如何把公众号文章优化成 AI 知识库可引用内容";
+      content.value = "## 公众号文章为什么需要 GEO 排版？\n\n传统公众号排版常常包含大量装饰性 DIV 和冗余样式。读者看起来还不错，但 AI 爬虫抓取后会得到噪声很高的 HTML，影响切片、召回和引用。\n\n### 结构化数据卡片\n\n目标：提升 AI 引用准确率\n方法：段首直答、保留 H2/H3、补充数据来源\n适用范围：科技自媒体、企业知识库、Agent 开发团队\n\n## 怎么做？\n\n每个章节先给结论，再补充证据和边界。涉及时间、地区、样本范围的数据，需要明确标出。";
+      renderPreview();
+      analyze();
+    })();
+  </script>
+</body>
+</html>

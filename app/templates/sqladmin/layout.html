@@ -1,0 +1,169 @@
+{% extends "sqladmin/base.html" %}
+{% from 'sqladmin/_macros.html' import display_menu %}
+{% block body %}
+<div class="wrapper">
+  <aside class="navbar navbar-expand-lg navbar-vertical navbar-expand-md navbar-dark">
+    <div class="container-fluid">
+      <h1 class="navbar-brand navbar-brand-autodark">
+        <a href="{{ url_for('admin:index') }}">
+          {% if admin.logo_url %}
+          <img src="{{ admin.logo_url }}" width="64" height="64" alt="Admin" class="navbar-brand-image" />
+          {% else %}
+          <h3>{{ admin.title }}</h3>
+          {% endif %}
+        </a>
+      </h1>
+      <nav class="navbar navbar-expand-sm" id="navbar-menu">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          {{ display_menu(admin._menu, request) }}
+        </div>
+      </nav>
+      {% if admin.authentication_backend %}
+      <a href="{{ request.url_for('admin:logout') }}" class="btn btn-secondary btn-icon">
+        <i class="fa fa-sign-out"></i>
+        <span>退出</span>
+      </a>
+      {% endif %}
+    </div>
+  </aside>
+  <div class="page-wrapper">
+    <div class="container-fluid">
+      <div class="page-header d-print-none">
+        {% block content_header %}
+        <div class="row align-items-center">
+          <div class="col">
+            <h2 class="page-title">{{ title }}</h2>
+            <div class="page-pretitle">{{ subtitle }}</div>
+          </div>
+        </div>
+        {% endblock %}
+      </div>
+    </div>
+    <div class="page-body flex-grow-1">
+      <div class="container-fluid">
+        <div class="row row-deck row-cards">
+          {% block content %} {% endblock %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    const textMap = new Map([
+      ["Cancel", "取消"],
+      ["Save", "保存"],
+      ["Save and continue editing", "保存并继续编辑"],
+      ["Save and add another", "保存并添加另一个"],
+      ["Save as new", "另存为新记录"],
+      ["Search", "搜索"],
+      ["Actions", "批量操作"],
+      ["Delete selected items", "删除选中项"],
+      ["Export", "导出"],
+      ["Logout", "退出"]
+    ]);
+
+    function translateText(value) {
+      const trimmed = value.trim();
+      if (!trimmed) return value;
+      if (textMap.has(trimmed)) return value.replace(trimmed, textMap.get(trimmed));
+      if (trimmed.startsWith("New ")) return value.replace("New ", "新建 ");
+      if (trimmed.startsWith("+ New ")) return value.replace("+ New ", "+ 新建 ");
+      if (trimmed.startsWith("Edit ")) return value.replace("Edit ", "编辑 ");
+      if (trimmed.startsWith("Search:")) return value.replace("Search:", "搜索：");
+      return value;
+    }
+
+    function localizeAdmin() {
+      document.querySelectorAll("input[type='submit']").forEach((input) => {
+        input.value = translateText(input.value);
+      });
+      document.querySelectorAll("input[placeholder]").forEach((input) => {
+        input.placeholder = translateText(input.placeholder);
+      });
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach((node) => {
+        const next = translateText(node.nodeValue);
+        if (next !== node.nodeValue) node.nodeValue = next;
+      });
+      enhanceShopImageInputs();
+    }
+
+    function fieldWrapper(input) {
+      return input.closest(".mb-3") || input.closest(".form-group") || input.parentElement;
+    }
+
+    function makeUploadControl(input, options) {
+      const wrap = fieldWrapper(input);
+      if (!wrap || wrap.querySelector(`[data-shop-upload="${options.mode}"]`)) return;
+      const box = document.createElement("div");
+      box.className = "mt-2 d-flex align-items-center gap-2 flex-wrap";
+      box.dataset.shopUpload = options.mode;
+      box.innerHTML = `
+        <input type="file" accept="image/*" ${options.multiple ? "multiple" : ""} class="d-none">
+        <button type="button" class="btn btn-outline-primary btn-sm">${options.label}</button>
+        <span class="text-muted small"></span>
+      `;
+      const fileInput = box.querySelector("input[type='file']");
+      const button = box.querySelector("button");
+      const status = box.querySelector("span");
+      button.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", async () => {
+        const files = Array.from(fileInput.files || []);
+        if (!files.length) return;
+        button.disabled = true;
+        status.textContent = "上传中...";
+        const urls = [];
+        try {
+          for (const file of files) {
+            const form = new FormData();
+            form.append("image", file);
+            const response = await fetch("/admin/shop-image-upload", {
+              method: "POST",
+              body: form,
+              credentials: "same-origin"
+            });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload.detail || "上传失败");
+            urls.push(payload.url);
+          }
+          if (options.multiple) {
+            const current = input.value.trim();
+            input.value = [current, ...urls].filter(Boolean).join("\\n");
+          } else {
+            input.value = urls[0] || "";
+          }
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+          status.textContent = "已上传";
+        } catch (error) {
+          status.textContent = error.message || "上传失败";
+        } finally {
+          button.disabled = false;
+          fileInput.value = "";
+        }
+      });
+      wrap.appendChild(box);
+    }
+
+    function enhanceShopImageInputs() {
+      const cover = document.querySelector('[name="cover_image"]');
+      if (cover) makeUploadControl(cover, { mode: "cover", label: "上传封面图", multiple: false });
+      const gallery = document.querySelector('[name="gallery_images"]');
+      if (gallery) makeUploadControl(gallery, { mode: "gallery", label: "上传商品图", multiple: true });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", localizeAdmin);
+    } else {
+      localizeAdmin();
+    }
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,432 @@
+{% extends "base.html" %}
+
+{% block head %}
+<meta name="description" content="{{ seo_description }}">
+{% if seo_image %}<meta property="og:image" content="{{ seo_image }}">{% endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ post.title | tojson }},
+  "description": {{ seo_description | tojson }},
+  "url": {{ post.canonical_url | tojson }},
+  "image": {{ seo_image | tojson }},
+  "datePublished": "{{ post.published_at_iso }}",
+  "dateModified": "{{ post.updated_at_iso }}",
+  "author": { "@type": "Person", "name": {{ author.name | tojson }} },
+  "publisher": { "@type": "Organization", "name": "meetseek" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "首页", "item": {{ main_base_url | tojson }} },
+    {"@type": "ListItem", "position": 2, "name": {{ post.category_slug | tojson }}, "item": {{ (main_base_url ~ "/" ~ post.category_slug) | tojson }} },
+    {"@type": "ListItem", "position": 3, "name": {{ ("动态详情" if post.type == "short" else post.title) | tojson }}, "item": {{ post.canonical_url | tojson }} }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<a href="{{ main_base_url }}/" class="mb-4 inline-flex items-center gap-1 text-sm font-bold text-slate-400 transition-colors hover:text-slate-700">← 返回提示词大厅</a>
+<nav class="mb-5 flex flex-wrap items-center gap-2 text-sm font-bold text-slate-400">
+  <a class="hover:text-orange-600" href="{{ main_base_url }}/">首页</a>
+  <span>/</span>
+  <a class="hover:text-orange-600" href="{{ main_base_url }}/{{ post.category_slug }}">{{ post.category_slug }}</a>
+  <span>/</span>
+  <span class="text-slate-500">{{ "动态详情" if post.type == "short" else post.title }}</span>
+</nav>
+<article class="glass soft relative overflow-visible rounded-3xl">
+  <div class="absolute right-5 top-5 z-50">{{ more_menu_html | safe }}</div>
+  {% if post.type != 'short' and post.og_image %}
+  <img class="max-h-[560px] w-full rounded-t-3xl bg-slate-950 object-cover" src="{{ post.og_image }}" alt="{{ post.title }}" loading="lazy">
+  {% endif %}
+  <div class="p-6 md:p-10">
+    {% if post.type == 'short' %}
+    <div class="flex items-start gap-3">
+      {% if author.avatar_url %}
+      <img class="h-10 w-10 rounded-full object-cover ring-1 ring-slate-200" src="{{ author.avatar_url }}" alt="{{ author.name }}" loading="lazy">
+      {% else %}
+      <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-950 text-sm font-black text-white">{{ author.name[:1] }}</span>
+      {% endif %}
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+          <span class="font-black text-slate-900">{{ author.name }}</span>
+          <span>·</span>
+          <time class="font-medium text-slate-400" datetime="{{ post.published_at_iso }}">{{ published_at_label }}</time>
+        </div>
+      </div>
+    </div>
+    <article class="prose prose-slate prose-lg mt-4 max-w-none text-slate-700 leading-relaxed">
+      {{ html | safe }}
+    </article>
+    {% else %}
+    <div class="flex flex-wrap items-center gap-2 text-sm font-bold text-slate-500">
+      <span class="rounded-full bg-orange-50 px-3 py-1 text-orange-600">{{ post.category_slug }}</span>
+      <span>{{ author.name }}</span>
+      <span>·</span>
+      <time datetime="{{ post.published_at_iso }}">{{ published_at_label }}</time>
+    </div>
+    <h1 class="mt-5 max-w-4xl text-4xl font-black leading-tight md:text-6xl">{{ post.title }}</h1>
+    {% if post.summary and post.type != 'short' %}
+    <p class="mt-5 max-w-3xl text-lg leading-relaxed text-slate-500">{{ post.summary }}</p>
+    {% endif %}
+    <div class="mt-6 flex items-center gap-3">
+      {% if author.avatar_url %}
+      <img class="h-8 w-8 rounded-full object-cover ring-1 ring-slate-200" src="{{ author.avatar_url }}" alt="{{ author.name }}" loading="lazy">
+      {% else %}
+      <span class="grid h-8 w-8 place-items-center rounded-full bg-slate-950 text-xs font-black text-white">{{ author.name[:1] }}</span>
+      {% endif %}
+      <div class="flex flex-wrap items-center gap-2 text-sm">
+        <span class="font-medium text-slate-800">{{ author.name }}</span>
+        <span class="text-slate-300">·</span>
+        <time class="text-slate-500" datetime="{{ post.published_at_iso }}">{{ published_at_label }}</time>
+      </div>
+    </div>
+    <hr class="my-8 border-slate-100">
+    <article class="prose prose-slate prose-lg max-w-none mx-auto text-slate-700 leading-relaxed">
+      {{ html | safe }}
+    </article>
+    {% endif %}
+  </div>
+</article>
+<section class="mt-6 flex justify-center">
+  <div class="flex flex-wrap items-center justify-center gap-3 rounded-full border border-slate-100 bg-white/80 p-2 shadow-sm backdrop-blur">
+    <button class="btn-like inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black text-slate-500 transition hover:bg-rose-50 hover:text-rose-500" type="button" data-post-id="{{ post.id }}" data-count="{{ post.like_count }}">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+      <span>点赞 <span data-count-label>{{ post.like_count }}</span></span>
+    </button>
+    <button class="btn-bookmark inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black text-slate-500 transition hover:bg-orange-50 hover:text-orange-600" type="button" data-post-id="{{ post.id }}" data-count="{{ post.bookmark_count }}">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z"/></svg>
+      <span>收藏 <span data-count-label>{{ post.bookmark_count }}</span></span>
+    </button>
+    <button id="copy-post-link" class="btn-share inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black text-slate-500 transition hover:bg-slate-100 hover:text-slate-800" type="button" data-url="{{ post.canonical_url }}">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L11 4.93"/><path d="M14 11a5 5 0 0 0-7.07 0L4.8 13.12a5 5 0 0 0 7.07 7.07L13 19.07"/></svg>
+      <span>复制链接</span>
+    </button>
+  </div>
+</section>
+<section id="comments" class="mt-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm" data-comments-root data-target-type="post" data-target-id="{{ post.id }}" data-current-user='{{ (user or none) | tojson }}'>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2 class="text-xl font-black">评论</h2>
+      <p class="mt-1 text-sm font-bold text-slate-400">参与讨论，补充经验或提出问题。</p>
+    </div>
+    <span id="comment-count-label" class="rounded-full bg-slate-50 px-3 py-1 text-xs font-black text-slate-400">加载中</span>
+  </div>
+
+  {% if user %}
+  <form id="comment-form" class="mt-5">
+    <textarea id="comment-content" class="min-h-28 w-full resize-y rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold leading-7 text-slate-700 outline-none transition focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-50" placeholder="写下你的评论..."></textarea>
+    <div class="mt-3 flex items-center justify-between gap-3">
+      <p id="comment-status" class="text-sm font-bold text-slate-400"></p>
+      <button class="rounded-full bg-orange-600 px-6 py-3 text-sm font-black text-white transition hover:bg-orange-700 disabled:bg-slate-300" type="submit">发送</button>
+    </div>
+  </form>
+  {% else %}
+  <div class="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm font-bold text-slate-500">
+    请 <a class="font-black text-orange-600 hover:text-orange-700" href="{{ main_base_url }}/account">登录后参与讨论</a>。
+  </div>
+  {% endif %}
+
+  <div id="comment-list" class="mt-6 grid gap-4"></div>
+</section>
+{% if related %}
+<section class="mt-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+  <h2 class="text-xl font-black">相关内容</h2>
+  <div class="mt-4 grid gap-4 md:grid-cols-3">
+    {% for item in related %}
+    <a class="rounded-2xl bg-slate-50 p-4 transition hover:bg-orange-50" href="/{{ item.category_slug }}/{{ item.slug }}">
+      <p class="line-clamp-2 font-black text-slate-900">{{ item.title }}</p>
+      <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-500">{{ item.summary }}</p>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+<section class="mt-6 grid gap-4 md:grid-cols-3">
+  <a class="glass cursor-pointer rounded-3xl p-6 font-black transition-all duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-md" href="{{ tools_base_url }}/">打开 AI 工具箱</a>
+  <a class="glass cursor-pointer rounded-3xl p-6 font-black transition-all duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-md" href="{{ prompts_base_url }}/">浏览提示词库</a>
+  <a class="glass cursor-pointer rounded-3xl p-6 font-black transition-all duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-md" href="{{ main_base_url }}/account">进入会员中心</a>
+</section>
+<script>
+  (function () {
+    function initExpandableContent(root = document) {
+      root.querySelectorAll(".content-box").forEach((box) => {
+        const btn = box.nextElementSibling;
+        if (!btn || !btn.classList.contains("expand-toggle-btn") || box.dataset.expandReady === "true") return;
+        box.dataset.expandReady = "true";
+        requestAnimationFrame(() => {
+          if (box.scrollHeight > box.clientHeight + 2) {
+            btn.classList.remove("hidden");
+          }
+        });
+        btn.addEventListener("click", function () {
+          if (box.classList.contains("line-clamp-4")) {
+            box.classList.remove("line-clamp-4");
+            btn.textContent = "收起";
+          } else {
+            box.classList.add("line-clamp-4");
+            btn.textContent = "展开全文";
+          }
+        });
+      });
+    }
+    initExpandableContent();
+
+    function setReactionState(button, active, count) {
+      const label = button.querySelector("[data-count-label]");
+      button.dataset.active = active ? "true" : "false";
+      button.dataset.count = String(Math.max(0, count));
+      button.classList.toggle("text-rose-500", button.classList.contains("btn-like") && active);
+      button.classList.toggle("bg-rose-50", button.classList.contains("btn-like") && active);
+      button.classList.toggle("text-orange-600", button.classList.contains("btn-bookmark") && active);
+      button.classList.toggle("bg-orange-50", button.classList.contains("btn-bookmark") && active);
+      if (label) label.textContent = String(Math.max(0, count));
+    }
+    async function toggleReaction(button, endpoint) {
+      const postId = Number(button.dataset.postId || 0);
+      if (!postId) return;
+      if (button.dataset.busy === "true") return;
+      button.dataset.busy = "true";
+      const wasActive = button.dataset.active === "true";
+      const previousCount = Number(button.dataset.count || 0);
+      setReactionState(button, !wasActive, previousCount + (wasActive ? -1 : 1));
+      try {
+        const response = await fetch(endpoint.replace(":id", String(postId)), { method: "POST" });
+        if (response.status === 401) {
+          window.location.href = "{{ main_base_url }}/account";
+          return;
+        }
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.detail || "操作失败");
+        setReactionState(button, Boolean(payload.active), Number(payload.count || 0));
+      } catch (error) {
+        setReactionState(button, wasActive, previousCount);
+      } finally {
+        button.dataset.busy = "false";
+      }
+    }
+    function showToast(text) {
+      let toast = document.getElementById("post-toast");
+      if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "post-toast";
+        toast.className = "fixed bottom-6 left-1/2 z-[80] -translate-x-1/2 rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg transition";
+        document.body.appendChild(toast);
+      }
+      toast.textContent = text;
+      toast.style.opacity = "1";
+      clearTimeout(window.__postToastTimer);
+      window.__postToastTimer = setTimeout(() => { toast.style.opacity = "0"; }, 1800);
+    }
+    function closeMoreMenus(exceptMenu) {
+      document.querySelectorAll(".more-menu").forEach((menu) => {
+        if (menu !== exceptMenu) menu.classList.add("hidden");
+      });
+    }
+    async function runPostMenuAction(button) {
+      const action = button.dataset.menuAction;
+      if (action === "copy") {
+        const url = new URL(button.dataset.url || window.location.href, window.location.origin).toString();
+        await navigator.clipboard.writeText(url);
+        showToast("已复制");
+        return;
+      }
+      if (action === "follow") {
+        const authorId = Number(button.dataset.authorId || 0);
+        if (!authorId) return;
+        const wasFollowing = button.dataset.following === "true";
+        button.dataset.following = wasFollowing ? "false" : "true";
+        button.textContent = wasFollowing ? "关注" : "取消关注";
+        const response = await fetch(`/api/users/${authorId}/toggle_follow`, { method: "POST" });
+        if (response.status === 401) { window.location.href = "{{ main_base_url }}/account"; return; }
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.detail || "操作失败");
+        button.dataset.following = payload.following ? "true" : "false";
+        button.textContent = payload.following ? "取消关注" : "关注";
+        showToast(payload.message || "已更新");
+        return;
+      }
+      if (action === "bookmark") {
+        const postId = Number(button.dataset.postId || 0);
+        const response = await fetch(`/api/posts/${postId}/toggle_bookmark`, { method: "POST" });
+        if (response.status === 401) { window.location.href = "{{ main_base_url }}/account"; return; }
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.detail || "操作失败");
+        showToast(payload.active ? "已收藏" : "已取消收藏");
+        return;
+      }
+      const postId = Number(button.dataset.postId || 0);
+      if (!postId) return;
+      const destructive = ["hide", "delete", "private", "not_interested", "block_author", "violation", "ban_author"].includes(action);
+      if (destructive) {
+        const card = document.querySelector("article.glass");
+        if (card) {
+          card.style.transition = "opacity .18s ease, transform .18s ease";
+          card.style.opacity = "0";
+          card.style.transform = "translateY(6px)";
+        }
+      }
+      const response = await fetch(`/api/posts/${postId}/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action })
+      });
+      if (response.status === 401) { window.location.href = "{{ main_base_url }}/account"; return; }
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.detail || "操作失败");
+      showToast(payload.message || "已更新");
+    }
+    document.addEventListener("click", async (event) => {
+      const toggle = event.target.closest(".more-menu-toggle");
+      if (toggle) {
+        event.preventDefault();
+        const menu = toggle.parentElement?.querySelector(".more-menu");
+        if (!menu) return;
+        const willOpen = menu.classList.contains("hidden");
+        closeMoreMenus(menu);
+        menu.classList.toggle("hidden", !willOpen);
+        return;
+      }
+      const menuAction = event.target.closest(".more-menu-action");
+      if (menuAction) {
+        event.preventDefault();
+        closeMoreMenus();
+        try {
+          await runPostMenuAction(menuAction);
+        } catch (error) {
+          showToast(error.message || "操作失败");
+        }
+        return;
+      }
+      if (!event.target.closest(".more-menu")) closeMoreMenus();
+      const likeButton = event.target.closest(".btn-like");
+      if (likeButton) {
+        event.preventDefault();
+        await toggleReaction(likeButton, "/api/posts/:id/toggle_like");
+        return;
+      }
+      const bookmarkButton = event.target.closest(".btn-bookmark");
+      if (bookmarkButton) {
+        event.preventDefault();
+        await toggleReaction(bookmarkButton, "/api/posts/:id/toggle_bookmark");
+        return;
+      }
+      const shareButton = event.target.closest(".btn-share");
+      if (shareButton) {
+        event.preventDefault();
+        const label = shareButton.querySelector("span");
+        const oldText = label?.textContent || "复制链接";
+        const url = new URL(shareButton.dataset.url || window.location.href, window.location.origin).toString();
+        await navigator.clipboard.writeText(url);
+        if (label) label.textContent = "✅ 已复制";
+        setTimeout(() => { if (label) label.textContent = oldText; }, 2000);
+      }
+    });
+
+    const root = document.querySelector("[data-comments-root]");
+    if (!root) return;
+    const targetType = root.dataset.targetType;
+    const targetId = root.dataset.targetId;
+    const list = document.getElementById("comment-list");
+    const countLabel = document.getElementById("comment-count-label");
+    const form = document.getElementById("comment-form");
+    const textarea = document.getElementById("comment-content");
+    const status = document.getElementById("comment-status");
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function relativeTime(timestamp) {
+      const seconds = Math.max(1, Math.floor(Date.now() / 1000) - Number(timestamp || 0));
+      if (seconds < 60) return "刚刚";
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes} 分钟前`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours} 小时前`;
+      const days = Math.floor(hours / 24);
+      return `${days} 天前`;
+    }
+
+    function avatarHtml(comment) {
+      const name = comment.author?.name || "用户";
+      if (comment.author?.avatar_url) {
+        return `<img class="h-10 w-10 rounded-full object-cover ring-1 ring-slate-200" src="${escapeHtml(comment.author.avatar_url)}" alt="${escapeHtml(name)}" loading="lazy">`;
+      }
+      return `<span class="grid h-10 w-10 place-items-center rounded-full bg-slate-950 text-sm font-black text-white">${escapeHtml(name.slice(0, 1) || "M")}</span>`;
+    }
+
+    function renderComment(comment) {
+      const name = comment.author?.name || "用户";
+      return `
+        <article class="flex gap-3 rounded-2xl bg-slate-50 p-4">
+          <div class="shrink-0">${avatarHtml(comment)}</div>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <b class="text-sm text-slate-900">${escapeHtml(name)}</b>
+              <span class="text-xs font-bold text-slate-400">${relativeTime(comment.created_at)}</span>
+            </div>
+            <p class="mt-2 whitespace-pre-line text-sm font-medium leading-7 text-slate-600">${escapeHtml(comment.content)}</p>
+          </div>
+        </article>
+      `;
+    }
+
+    async function loadComments() {
+      const response = await fetch(`/api/comments/${targetType}/${targetId}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "评论加载失败");
+      const comments = data.comments || [];
+      countLabel.textContent = `${comments.length} 条评论`;
+      list.innerHTML = comments.length
+        ? comments.map(renderComment).join("")
+        : '<div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-bold text-slate-400">暂无评论，来写第一条。</div>';
+    }
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const content = textarea.value.trim();
+      if (!content) return;
+      status.textContent = "发送中...";
+      const payload = new FormData();
+      payload.append("target_type", targetType);
+      payload.append("target_id", targetId);
+      payload.append("content", content);
+      try {
+        const response = await fetch("/api/comments", { method: "POST", body: payload });
+        const data = await response.json();
+        if (response.status === 401) {
+          window.location.href = "{{ main_base_url }}/account";
+          return;
+        }
+        if (!response.ok) throw new Error(data.detail || "发送失败");
+        textarea.value = "";
+        const empty = list.querySelector(".border-dashed");
+        if (empty) list.innerHTML = "";
+        list.insertAdjacentHTML("afterbegin", renderComment(data.comment));
+        const count = list.querySelectorAll("article").length;
+        countLabel.textContent = `${count} 条评论`;
+        status.textContent = "已发送";
+        setTimeout(() => { status.textContent = ""; }, 1500);
+      } catch (error) {
+        status.textContent = error.message || "发送失败";
+      }
+    });
+
+    loadComments().catch((error) => {
+      countLabel.textContent = "加载失败";
+      list.innerHTML = `<div class="rounded-2xl bg-rose-50 p-4 text-sm font-black text-rose-600">${escapeHtml(error.message)}</div>`;
+    });
+  })();
+</script>
+{% endblock %}

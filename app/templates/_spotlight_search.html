@@ -1,0 +1,124 @@
+<button type="button" data-search-trigger onclick="openSearch()" class="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-3 text-sm font-black text-white shadow-xl transition hover:bg-orange-600 md:hidden">
+  <span>🔍</span><span>搜索</span>
+</button>
+<div id="global-search-modal" class="fixed inset-0 z-50 hidden items-start justify-center bg-slate-900/40 px-4 pt-24 backdrop-blur-sm">
+  <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div class="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
+      <span class="text-xl text-slate-400">🔍</span>
+      <input id="searchInput" type="search" autocomplete="off" placeholder="搜索内容与工具..." class="w-full border-none bg-transparent text-lg font-bold text-slate-900 placeholder:text-slate-300 outline-none focus:ring-0">
+      <button type="button" onclick="closeSearch()" class="rounded-lg px-2 py-1 text-xs font-black text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">ESC</button>
+    </div>
+    <ul id="searchResults" class="max-h-[26rem] overflow-y-auto divide-y divide-slate-100"></ul>
+  </div>
+</div>
+<script>
+  (function () {
+    const modal = document.getElementById("global-search-modal");
+    const input = document.getElementById("searchInput");
+    const results = document.getElementById("searchResults");
+    let timer = null;
+    let controller = null;
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, function (char) {
+        return {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"}[char];
+      });
+    }
+
+    function renderIdle() {
+      if (!results) return;
+      results.innerHTML = '<li class="px-5 py-8 text-center text-sm font-bold text-slate-400">输入关键词搜索沉淀内容</li>';
+    }
+
+    function renderResults(items) {
+      if (!results) return;
+      if (!items.length) {
+        results.innerHTML = '<li class="px-5 py-8 text-center text-sm font-bold text-slate-400">未找到相关内容</li>';
+        return;
+      }
+      results.innerHTML = items.map(function (item) {
+        const title = escapeHtml(item.title || "未命名内容");
+        const snippet = escapeHtml(item.snippet || "");
+        const type = escapeHtml(item.type_label || item.type || "内容");
+        const url = escapeHtml(item.url || "#");
+        return '<li><a class="block px-5 py-4 transition hover:bg-slate-50" href="' + url + '">' +
+          '<div class="flex items-center justify-between gap-4">' +
+            '<span class="line-clamp-1 text-sm font-black text-slate-900">' + title + '</span>' +
+            '<span class="shrink-0 rounded-full bg-orange-50 px-2 py-1 text-[11px] font-black text-orange-600">' + type + '</span>' +
+          '</div>' +
+          (snippet ? '<p class="mt-1 line-clamp-2 text-sm leading-6 text-slate-500">' + snippet + '</p>' : '') +
+        '</a></li>';
+      }).join("");
+    }
+
+    window.openSearch = function () {
+      if (!modal || !input) return;
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      window.setTimeout(function () { input.focus(); }, 0);
+    };
+
+    window.closeSearch = function () {
+      if (!modal || !input) return;
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      input.value = "";
+      renderIdle();
+    };
+
+    document.addEventListener("click", function (event) {
+      const trigger = event.target.closest("[data-search-trigger]");
+      if (!trigger) return;
+      event.preventDefault();
+      window.openSearch();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      const key = String(event.key || "").toLowerCase();
+      if ((event.metaKey || event.ctrlKey) && key === "k") {
+        event.preventDefault();
+        window.openSearch();
+      }
+      if (event.key === "Escape" && modal && !modal.classList.contains("hidden")) {
+        window.closeSearch();
+      }
+    });
+
+    if (modal) {
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) window.closeSearch();
+      });
+    }
+
+    if (input) {
+      input.addEventListener("input", function () {
+        const query = input.value.trim();
+        window.clearTimeout(timer);
+        if (!query) {
+          renderIdle();
+          return;
+        }
+        timer = window.setTimeout(async function () {
+          if (controller) controller.abort();
+          controller = new AbortController();
+          if (results) {
+            results.innerHTML = '<li class="px-5 py-8 text-center text-sm font-bold text-slate-400">搜索中...</li>';
+          }
+          try {
+            const response = await fetch("/api/search?q=" + encodeURIComponent(query), { signal: controller.signal });
+            if (!response.ok) throw new Error("search failed");
+            const payload = await response.json();
+            renderResults(Array.isArray(payload) ? payload : (payload.results || []));
+          } catch (error) {
+            if (error.name === "AbortError") return;
+            if (results) {
+              results.innerHTML = '<li class="px-5 py-8 text-center text-sm font-bold text-rose-500">搜索暂时不可用</li>';
+            }
+          }
+        }, 300);
+      });
+    }
+
+    renderIdle();
+  })();
+</script>

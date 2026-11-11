@@ -1,0 +1,14 @@
+<a href="{{ item.href }}" class="pm-card {{ item.accent_class }}">
+  <div class="pm-card-art {{ item.accent_class }}">
+    <div class="pm-card-top">
+      <div class="pm-card-icon">{{ item.icon }}</div>
+      <span class="pm-card-badge">{{ item.category_label }}</span>
+    </div>
+    <h3 class="pm-card-title">{{ item.title }}</h3>
+    <p class="pm-card-desc">{{ item.desc }}</p>
+  </div>
+  <div class="pm-card-meta">
+    <span class="pm-rating">⭐ {{ item.rating }}</span>
+    <span>{{ item.users }} {{ ui.users }}</span>
+  </div>
+</a>

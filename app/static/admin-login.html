@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登录工具箱后台</title>
+  <meta name="robots" content="noindex,nofollow">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-white">
+  <main class="mx-auto grid min-h-screen max-w-md place-items-center px-5">
+    <section class="w-full rounded-2xl border border-white/10 bg-white p-6 text-slate-950 shadow-2xl">
+      <div class="mb-6">
+        <div class="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-orange-600 font-black text-white">M</div>
+        <h1 class="text-2xl font-black">工具箱后台登录</h1>
+        <p class="mt-2 text-sm leading-6 text-slate-600">请输入管理员密码。未登录时不会展示后台菜单、用户、积分和配置内容。</p>
+      </div>
+      <form id="admin-login-form" class="grid gap-3">
+        <input id="admin-password" type="password" class="h-12 rounded-xl border border-slate-300 px-4 outline-none focus:border-orange-500" placeholder="管理员密码" autofocus>
+        <button class="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white" type="submit">登录后台</button>
+        <p id="admin-login-message" class="min-h-5 text-sm text-slate-500"></p>
+      </form>
+      <a href="/" class="mt-5 inline-flex text-sm font-bold text-slate-500">返回工具箱</a>
+    </section>
+  </main>
+  <script>
+    document.querySelector("#admin-login-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const message = document.querySelector("#admin-login-message");
+      message.textContent = "正在登录...";
+      const form = new FormData();
+      form.append("password", document.querySelector("#admin-password").value);
+      try {
+        const response = await fetch("/api/admin/login", { method: "POST", body: form });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "登录失败");
+        location.href = "/admin";
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    });
+  </script>
+</body>
+</html>

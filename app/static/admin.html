@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>meetseek 工具功能管理</title>
+  <meta name="robots" content="noindex,nofollow">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { letter-spacing: 0; }
+    .admin-section { display: none; }
+    .admin-section.is-active { display: block; }
+    .admin-nav.is-active { background: #0f172a; color: #fff; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-950">
+  <header class="border-b border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+      <a href="/admin-tools" class="flex items-center gap-3 font-black text-xl">
+        <span class="grid h-9 w-9 place-items-center rounded-lg bg-orange-600 text-white">M</span>
+        <span>工具功能管理</span>
+      </a>
+      <div class="flex items-center gap-2">
+        <a href="/admin/" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700">数据后台</a>
+        <button id="admin-logout" class="rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white" type="button">退出后台</button>
+        <a href="/" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700">返回主站</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto grid max-w-7xl gap-6 px-5 py-8 lg:grid-cols-[190px_minmax(0,1fr)]">
+    <aside class="lg:sticky lg:top-6 lg:h-fit">
+      <nav class="grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+        <button data-admin-section="overview" class="admin-nav is-active rounded-xl px-4 py-3 text-left text-sm font-bold" type="button">概览</button>
+        <button data-admin-section="features" class="admin-nav rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-100" type="button">工具开关</button>
+        <button data-admin-section="prompt-config" class="admin-nav rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-100" type="button">提示词配置</button>
+        <button data-admin-section="users" class="admin-nav rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-100" type="button">用户会员</button>
+        <button data-admin-section="checkins" class="admin-nav rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-100" type="button">签到积分</button>
+        <button data-admin-section="payments" class="admin-nav rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-100" type="button">充值审核</button>
+        <button data-admin-section="credits" class="admin-nav rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-100" type="button">积分规则</button>
+        <button data-admin-section="usage" class="admin-nav rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-100" type="button">次数限制</button>
+        <button data-admin-section="rewards" class="admin-nav rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-100" type="button">广告积分</button>
+        <button data-admin-section="ads" class="admin-nav rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-100" type="button">广告位</button>
+        <button data-admin-section="link-cards" class="admin-nav rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-100" type="button">链接卡片</button>
+        <button data-admin-section="logs" class="admin-nav rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-100" type="button">日志任务</button>
+      </nav>
+    </aside>
+
+    <div class="grid gap-6">
+      <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 class="text-2xl font-black">后台管理</h1>
+            <p class="mt-1 text-sm text-slate-600">左侧选择功能，只看当前需要管理的内容。</p>
+          </div>
+          <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">主后台功能面板</span>
+        </div>
+        <div class="grid gap-4">
+          <div class="flex flex-wrap gap-3">
+            <button id="admin-refresh" class="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white" type="button">刷新后台</button>
+            <button id="admin-cleanup" class="rounded-xl bg-orange-600 px-5 py-3 font-bold text-white" type="button">手动清理</button>
+          </div>
+          <div id="admin-message" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm"></div>
+        </div>
+      </section>
+
+      <section id="section-overview" class="admin-section is-active rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">概览</h2>
+          <p class="mt-1 text-sm text-slate-600">磁盘占用和访问统计。点击“刷新后台”后更新。</p>
+        </div>
+        <div id="overview-content" class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">请先输入 token 并刷新后台。</div>
+      </section>
+
+      <section id="section-features" class="admin-section rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">工具开关</h2>
+          <p class="mt-1 text-sm text-slate-600">按工具单独开启或关闭前台功能。</p>
+        </div>
+        <div class="grid gap-3 md:grid-cols-4">
+          <button data-feature="video" class="feature-toggle rounded-xl bg-slate-100 px-5 py-3 font-bold text-slate-800" type="button">开关视频工具</button>
+          <button data-feature="image" class="feature-toggle rounded-xl bg-slate-100 px-5 py-3 font-bold text-slate-800" type="button">开关图片修复</button>
+          <button data-feature="metadata" class="feature-toggle rounded-xl bg-slate-100 px-5 py-3 font-bold text-slate-800" type="button">开关剥壳机</button>
+          <button data-feature="compress" class="feature-toggle rounded-xl bg-slate-100 px-5 py-3 font-bold text-slate-800" type="button">开关文件压缩</button>
+          <button data-feature="office" class="feature-toggle rounded-xl bg-slate-100 px-5 py-3 font-bold text-slate-800" type="button">开关办公转换</button>
+          <button data-feature="cover" class="feature-toggle rounded-xl bg-slate-100 px-5 py-3 font-bold text-slate-800" type="button">开关封面提取</button>
+          <button data-feature="copy" class="feature-toggle rounded-xl bg-slate-100 px-5 py-3 font-bold text-slate-800" type="button">开关文案转换</button>
+          <button data-feature="prompt" class="feature-toggle rounded-xl bg-slate-100 px-5 py-3 font-bold text-slate-800" type="button">开关提示词</button>
+        </div>
+        <div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div class="mb-3">
+            <h3 class="font-black">视频下载次数限制</h3>
+            <p class="mt-1 text-sm text-slate-600">游客固定不可下载。这里设置会员每天可下载多少次，-1 表示不限制。</p>
+          </div>
+          <div class="grid gap-3 md:grid-cols-3">
+            <label class="text-sm font-bold text-slate-700">Free 单条下载/天
+              <input id="video-single-free" type="number" min="-1" class="mt-2 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:border-orange-500">
+            </label>
+            <label class="text-sm font-bold text-slate-700">Pro 单条下载/天
+              <input id="video-single-pro" type="number" min="-1" class="mt-2 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:border-orange-500">
+            </label>
+            <label class="text-sm font-bold text-slate-700">VIP 单条下载/天
+              <input id="video-single-vip" type="number" min="-1" class="mt-2 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:border-orange-500">
+            </label>
+            <label class="text-sm font-bold text-slate-700">Free 批量链接数/天
+              <input id="video-batch-free" type="number" min="-1" class="mt-2 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:border-orange-500">
+            </label>
+            <label class="text-sm font-bold text-slate-700">Pro 批量链接数/天
+              <input id="video-batch-pro" type="number" min="-1" class="mt-2 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:border-orange-500">
+            </label>
+            <label class="text-sm font-bold text-slate-700">VIP 批量链接数/天
+              <input id="video-batch-vip" type="number" min="-1" class="mt-2 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:border-orange-500">
+            </label>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center gap-3">
+            <button id="video-usage-save" class="rounded-xl bg-orange-600 px-5 py-3 font-bold text-white" type="button">保存次数限制</button>
+            <p id="video-config-status" class="text-sm text-slate-600"></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-prompt-config" class="admin-section rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">AI API 分用途配置</h2>
+          <p class="mt-1 text-sm text-slate-600">图片反推必须用视觉模型；提示词翻译、文案改写和视频总结可以分别使用文本模型。</p>
+        </div>
+        <div class="grid gap-4">
+          <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+            <label class="text-sm font-bold text-slate-700">配置用途
+              <select id="prompt-config-key" class="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4 outline-none focus:border-emerald-500"></select>
+            </label>
+            <div class="rounded-xl bg-slate-950 p-4 text-sm text-white">
+              <b id="prompt-kind-label">模型类型</b>
+              <p id="prompt-config-description" class="mt-1 text-slate-300"></p>
+            </div>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="text-sm font-bold text-slate-700">API 平台
+              <select id="prompt-provider" class="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4 outline-none focus:border-emerald-500"></select>
+            </label>
+            <label class="text-sm font-bold text-slate-700">API Base
+              <input id="prompt-api-base" class="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4 outline-none focus:border-emerald-500" placeholder="https://api.openai.com/v1">
+            </label>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="text-sm font-bold text-slate-700">模型名称
+              <input id="prompt-model" class="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4 outline-none focus:border-emerald-500" placeholder="gpt-4o-mini">
+            </label>
+            <div class="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+              <b>预设规则</b>
+              <p class="mt-1">已预置火山方舟、文心、通义、DeepSeek、Kimi、智谱、豆包、混元、小米 MiMo、MiniMax、ChatGPT、Claude、Gemini。DeepSeek deepseek-chat 仅适合文本，不适合图片反推。</p>
+              <p id="prompt-provider-note" class="mt-2 font-bold text-orange-600"></p>
+            </div>
+          </div>
+          <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+            <label class="text-sm font-bold text-slate-700">API Key
+              <input id="prompt-api-key" type="password" class="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4 outline-none focus:border-emerald-500" placeholder="留空表示不修改已保存的 Key">
+            </label>
+            <label class="flex items-center gap-2 pt-8 text-sm font-bold text-slate-700">
+              <input id="prompt-clear-key" type="checkbox">
+              清除后台保存的 Key
+            </label>
+          </div>
+          <label class="text-sm font-bold text-slate-700">系统 Skill / 规则
+            <textarea id="prompt-skill" rows="8" class="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm leading-6 outline-none focus:border-emerald-500"></textarea>
+          </label>
+          <label class="text-sm font-bold text-slate-700">提示词图库管理员邮箱
+            <input id="prompt-admin-emails" class="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4 outline-none focus:border-emerald-500" placeholder="多个邮箱用英文逗号分隔">
+          </label>
+          <div class="flex flex-wrap items-center gap-3">
+            <button id="prompt-save" class="rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white" type="button">保存提示词配置</button>
+            <button id="prompt-test" class="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white" type="button">测试连接</button>
+            <span id="prompt-config-status" class="text-sm text-slate-500"></span>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-users" class="admin-section rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">用户会员</h2>
+          <p class="mt-1 text-sm text-slate-600">查看注册用户，并调整会员等级 free / pro / vip 和积分余额。</p>
+        </div>
+        <div class="mb-4">
+          <input id="user-search" class="h-12 w-full rounded-xl border border-slate-300 px-4 outline-none focus:border-orange-500" placeholder="搜索会员昵称、邮箱、等级或状态...">
+        </div>
+        <div id="users-manager" class="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">请先输入 token 并刷新后台。</div>
+      </section>
+
+      <section id="section-checkins" class="admin-section rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">会员签到积分</h2>
+          <p class="mt-1 text-sm text-slate-600">配置每日签到送多少积分，以及连续签到满周期的额外奖励。</p>
+        </div>
+        <div class="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+          <label class="flex items-center gap-2 font-bold"><input id="checkin-enabled" type="checkbox"> 开启每日签到</label>
+          <div class="grid gap-3 md:grid-cols-3">
+            <label class="font-bold text-slate-700">每日积分 <input id="checkin-points" type="number" min="0" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3"></label>
+            <label class="font-bold text-slate-700">连续天数 <input id="checkin-streak-days" type="number" min="1" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3"></label>
+            <label class="font-bold text-slate-700">连续奖励积分 <input id="checkin-streak-bonus" type="number" min="0" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3"></label>
+          </div>
+          <label class="font-bold text-slate-700">标题 <input id="checkin-title" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3"></label>
+          <label class="font-bold text-slate-700">说明 <textarea id="checkin-description" rows="3" class="mt-2 w-full rounded-xl border border-slate-300 p-3"></textarea></label>
+          <button id="checkin-save" class="w-fit rounded-xl bg-blue-600 px-5 py-3 font-bold text-white" type="button">保存签到规则</button>
+        </div>
+        <div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <h3 class="font-black">最近签到记录</h3>
+          <div id="checkin-records" class="mt-3 grid gap-2 text-sm text-slate-600">请先刷新后台。</div>
+        </div>
+      </section>
+
+      <section id="section-payments" class="admin-section rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">积分充值与审核</h2>
+          <p class="mt-1 text-sm text-slate-600">先支持微信/支付宝收款码人工审核；正式支付接口后续可以接 Stripe、微信支付或支付宝开放平台回调。</p>
+        </div>
+        <div class="grid gap-4">
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="flex items-center gap-2 text-sm font-bold"><input id="payment-manual-enabled" type="checkbox"> 开启人工充值</label>
+              <label class="text-sm font-bold text-slate-700">积分套餐 JSON
+                <textarea id="payment-packages" rows="5" class="mt-2 w-full rounded-xl border border-slate-300 p-3 font-mono text-xs"></textarea>
+              </label>
+            </div>
+            <div class="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
+              <label class="flex items-center gap-2 text-sm font-bold"><input id="payment-stripe-enabled" type="checkbox"> 开启 Stripe Checkout</label>
+              <label class="text-sm font-bold text-slate-700">币种 <input id="payment-stripe-currency" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3" placeholder="usd"></label>
+              <label class="text-sm font-bold text-slate-700">Secret Key <input id="payment-stripe-secret" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3" placeholder="留空不修改已保存 Key"></label>
+              <label class="text-sm font-bold text-slate-700">Webhook Secret <input id="payment-stripe-webhook-secret" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3" placeholder="留空不修改已保存 Secret"></label>
+              <label class="text-sm font-bold text-slate-700">成功返回 URL <input id="payment-stripe-success" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3" placeholder="默认返回工具箱首页"></label>
+              <label class="text-sm font-bold text-slate-700">取消返回 URL <input id="payment-stripe-cancel" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3" placeholder="默认返回工具箱首页"></label>
+              <p id="payment-stripe-state" class="md:col-span-2 text-xs text-slate-500"></p>
+            </div>
+            <div class="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
+              <label class="flex items-center gap-2 text-sm font-bold"><input id="payment-xunhu-enabled" type="checkbox"> 开启虎皮椒/迅虎支付</label>
+              <label class="text-sm font-bold text-slate-700">APPID <input id="payment-xunhu-appid" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3" placeholder="虎皮椒 APPID"></label>
+              <label class="text-sm font-bold text-slate-700">APPSECRET <input id="payment-xunhu-appsecret" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3" placeholder="留空不修改已保存 Secret"></label>
+              <label class="text-sm font-bold text-slate-700">网关地址 <input id="payment-xunhu-gateway" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3" placeholder="https://api.xunhupay.com/payment/do.html"></label>
+              <label class="text-sm font-bold text-slate-700">异步通知 URL <input id="payment-xunhu-notify" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3" placeholder="默认自动生成"></label>
+              <label class="text-sm font-bold text-slate-700">返回 URL <input id="payment-xunhu-return" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3" placeholder="默认返回工具箱首页"></label>
+              <label class="text-sm font-bold text-slate-700">取消返回 URL <input id="payment-xunhu-callback" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3" placeholder="默认返回工具箱首页"></label>
+              <p id="payment-xunhu-state" class="md:col-span-2 text-xs text-slate-500"></p>
+            </div>
+            <label class="mt-3 block text-sm font-bold text-slate-700">充值说明
+              <textarea id="payment-instructions" rows="3" class="mt-2 w-full rounded-xl border border-slate-300 p-3 text-sm"></textarea>
+            </label>
+            <div class="mt-3 grid gap-3 md:grid-cols-2">
+              <label class="text-sm font-bold text-slate-700">微信收款码 <input id="payment-wechat-qr" type="file" accept="image/*" class="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-2"></label>
+              <label class="text-sm font-bold text-slate-700">支付宝收款码 <input id="payment-alipay-qr" type="file" accept="image/*" class="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-2"></label>
+            </div>
+            <button id="payment-save" class="mt-3 rounded-xl bg-orange-600 px-5 py-3 font-bold text-white" type="button">保存充值配置</button>
+          </div>
+          <div id="payment-orders-manager" class="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">请先刷新后台。</div>
+        </div>
+      </section>
+
+      <section id="section-credits" class="admin-section rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">工具 / 模型积分规则</h2>
+          <p class="mt-1 text-sm text-slate-600">设置每个工具、提示词操作和模型标签的扣分、可用会员等级和开关。</p>
+        </div>
+        <div id="credit-rules-manager" class="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">请先输入 token 并刷新后台。</div>
+      </section>
+
+      <section id="section-usage" class="admin-section rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">每日次数限制</h2>
+          <p class="mt-1 text-sm text-slate-600">游客、free、pro、vip 每天分别可用多少次。填 0 表示禁用，填 -1 表示不限次数。</p>
+        </div>
+        <div id="usage-rules-manager" class="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">请先输入 token 并刷新后台。</div>
+      </section>
+
+      <section id="section-rewards" class="admin-section rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">看广告赚积分</h2>
+          <p class="mt-1 text-sm text-slate-600">设置用户看广告停留多少秒、每次得多少积分、每天最多领取几次。</p>
+        </div>
+        <div class="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+          <label class="flex items-center gap-2 font-bold"><input id="reward-enabled" type="checkbox"> 开启广告积分</label>
+          <div class="grid gap-3 md:grid-cols-3">
+            <label class="font-bold text-slate-700">观看秒数 <input id="reward-seconds" type="number" min="1" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3"></label>
+            <label class="font-bold text-slate-700">每次积分 <input id="reward-points" type="number" min="0" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3"></label>
+            <label class="font-bold text-slate-700">每日上限 <input id="reward-daily-limit" type="number" min="0" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3"></label>
+          </div>
+          <label class="font-bold text-slate-700">标题 <input id="reward-title" class="mt-2 h-10 w-full rounded-xl border border-slate-300 px-3"></label>
+          <label class="font-bold text-slate-700">说明 <textarea id="reward-description" rows="3" class="mt-2 w-full rounded-xl border border-slate-300 p-3"></textarea></label>
+          <button id="reward-save" class="w-fit rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white" type="button">保存广告积分规则</button>
+        </div>
+      </section>
+
+      <section id="section-ads" class="admin-section rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">广告位可视化管理</h2>
+          <p class="mt-1 text-sm text-slate-600">每个广告位都可选 1 个横幅、2 个小横幅或 4 个豆腐块；支持 Google AdSense 代码，也支持自建广告 HTML。</p>
+        </div>
+        <div class="mb-5 grid gap-3 md:grid-cols-5">
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold">顶部横幅</div>
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold">工具卡片下方</div>
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold">视频工具下方</div>
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold">图片工具下方</div>
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold">底部广告位</div>
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800">IP页横幅</div>
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800">IP豆腐块 1</div>
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800">IP豆腐块 2</div>
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800">IP豆腐块 3</div>
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800">IP豆腐块 4</div>
+        </div>
+        <div id="ad-manager" class="grid gap-4"></div>
+      </section>
+
+      <section id="section-link-cards" class="admin-section rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">链接卡片白名单 / 黑名单</h2>
+          <p class="mt-1 text-sm text-slate-600">白名单域名才会自动生成卡片；黑名单优先级最高，命中后不生成卡片，也不提供可点击链接。</p>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2">
+          <label class="text-sm font-bold text-slate-700">白名单域名
+            <textarea id="link-card-whitelist" rows="8" class="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-mono text-sm" placeholder="每行一个域名，如：mp.weixin.qq.com"></textarea>
+          </label>
+          <label class="text-sm font-bold text-slate-700">黑名单域名
+            <textarea id="link-card-blacklist" rows="8" class="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-mono text-sm" placeholder="每行一个域名，命中后直接屏蔽卡片化"></textarea>
+          </label>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <button id="link-card-save" class="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white" type="button">保存链接规则</button>
+          <p id="link-card-status" class="text-sm font-bold text-slate-500"></p>
+        </div>
+      </section>
+
+      <section id="section-logs" class="admin-section rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-5">
+          <h2 class="text-xl font-black">日志任务</h2>
+          <p class="mt-1 text-sm text-slate-600">当前任务、最近访客和最近日志。访客和日志默认折叠，点击展开。</p>
+        </div>
+        <div id="logs-content" class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">请先输入 token 并刷新后台。</div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/static/admin.js?v=20260513-link-cards"></script>
+</body>
+</html>

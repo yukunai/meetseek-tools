@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="{{ lang }}" dir="{{ dir }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ meta.title }}</title>
+  <meta name="description" content="{{ meta.description }}">
+  <link rel="canonical" href="{{ meta.canonical_url }}">
+  <link rel="stylesheet" href="/static/plugin-market.css">
+  <link rel="stylesheet" href="/static/plugin-market-overrides.css">
+  <link rel="stylesheet" href="/static/plugin-list.css?v=20260526-category-split">
+</head>
+<body>
+  <div class="pl-shell">
+    <aside class="pl-sidebar">
+      <a href="/" class="pm-brand">
+        <span class="pm-logo">M</span>
+        <span>
+          <b class="pm-brand-text">MeetSeek</b>
+          <small>{{ list_ui.extension_marketplace }}</small>
+        </span>
+      </a>
+
+      <nav class="pl-nav">
+        <a href="/" class="pl-nav-item"><span>⌂</span>{{ ui.home }}</a>
+        <a href="/" class="pl-nav-item"><span>⌕</span>{{ ui.discover }}</a>
+        <a href="/plugins" class="pl-nav-item active"><span>▦</span>{{ list_ui.all_extensions }}</a>
+        <a href="#categories" class="pl-nav-item"><span>▣</span>{{ ui.categories }}</a>
+        <a href="#trending" class="pl-nav-item"><span>↗</span>{{ ui.top_charts }}</a>
+        <a href="#new" class="pl-nav-item"><span>✦</span>{{ ui.new_noteworthy }}</a>
+      </nav>
+
+      <div class="pm-lang">
+        <div class="pm-lang-two">
+          <a class="pm-pill{% if lang == 'zh' %} active{% endif %}" href="/plugins">中文</a>
+          <a class="pm-pill{% if lang == 'en' %} active{% endif %}" href="/plugins?lang=en">English</a>
+        </div>
+        <label class="sr-only" for="plugin-list-lang-select">{{ ui.other_languages }}</label>
+        <select id="plugin-list-lang-select" class="pm-select" onchange="if(this.value) window.location.href='/plugins?lang='+this.value">
+          <option value="">{{ ui.other_languages }}</option>
+          {% for option in other_language_options %}
+            <option value="{{ option.code }}" {% if option.selected %}selected{% endif %}>{{ option.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="pl-side-section">
+        <p>{{ ui.categories }}</p>
+        {% for item in category_filters %}
+          <a href="{{ item.href }}" class="{% if item.active %}active{% endif %}">{{ item.label }}</a>
+        {% endfor %}
+      </div>
+
+      <div class="pl-publish">
+        <b>{{ ui.creator_label }}</b>
+        <p>{{ ui.creator_title }}</p>
+        <a href="/plugins/submit">{{ ui.submit }}</a>
+      </div>
+    </aside>
+
+    <main class="pl-main">
+      <header class="pl-topbar">
+        <div class="pl-search">
+          <span>⌕</span>
+          <input placeholder="{{ t.search }}">
+          <kbd>⌘ K</kbd>
+        </div>
+        <div class="pl-user">
+          <span>♡</span>
+          <a href="/account">{{ signin_label | safe }}</a>
+        </div>
+      </header>
+
+      <section class="pl-heading">
+        <h1>{% if selected_category_label %}{{ selected_category_label }}{% else %}{{ list_ui.all_extensions }}{% endif %}</h1>
+        <p>{% if selected_category_label %}{{ selected_category_label }}分类插件列表。{% else %}{{ list_ui.subtitle }}{% endif %}</p>
+        <div class="pl-filter-pills">
+          <a class="{% if not selected_category %}active{% endif %}" href="/plugins{% if lang != 'zh' %}?lang={{ lang }}{% endif %}">{{ list_ui.all }}</a>
+          {% for item in category_filters[:5] %}
+            <a class="{% if item.active %}active{% endif %}" href="{{ item.href }}">{{ item.label }}</a>
+          {% endfor %}
+          <a href="#categories">{{ list_ui.more }}⌄</a>
+        </div>
+      </section>
+
+      <section class="pl-stats">
+        <div><span class="pl-stat-icon blue">▣</span><b>{{ total_extensions }}</b><small>{{ list_ui.total_extensions }}</small></div>
+        <div><span class="pl-stat-icon green">♨</span><b>{{ new_this_week }}</b><small>{{ list_ui.new_this_week }}</small></div>
+        <div><span class="pl-stat-icon purple">♣</span><b>{{ active_users }}</b><small>{{ list_ui.active_users }}</small></div>
+        <div><span class="pl-stat-icon orange">★</span><b>{{ average_rating }}</b><small>{{ list_ui.average_rating }}</small></div>
+      </section>
+
+      <section class="pl-toolbar">
+        <button>☷ {{ list_ui.filters }}</button>
+        <div>
+          <select aria-label="Sort plugins">
+            <option>{{ list_ui.most_popular }}</option>
+            <option>{{ list_ui.highest_rated }}</option>
+            <option>{{ list_ui.newest }}</option>
+          </select>
+          <button class="active">▦</button>
+          <button>☰</button>
+        </div>
+      </section>
+
+      <section class="pl-grid" id="extensions">
+        {% for item in all_items %}
+          <a class="pl-card" href="{{ item.href }}">
+            <div class="pl-card-head">
+              <span class="pl-card-icon {{ item.accent_class }}">{{ item.icon }}</span>
+              <div>
+                <h2>{{ item.title }}</h2>
+                <p>{{ item.desc }}</p>
+              </div>
+            </div>
+            <div class="pl-card-meta">
+              <span>★ {{ item.rating }}</span>
+              <span>◷ {{ item.users }} {{ ui.users }}</span>
+            </div>
+            <span class="pl-card-badge">{{ item.category_label }}</span>
+          </a>
+        {% endfor %}
+      </section>
+
+      <nav class="pl-pagination" aria-label="Pagination">
+        <a href="#">‹</a>
+        <a class="active" href="#">1</a>
+        <a href="#">2</a>
+        <a href="#">3</a>
+        <span>...</span>
+        <a href="#">136</a>
+        <a href="#">›</a>
+      </nav>
+
+      <section class="pl-hub">
+        <div>
+          <h2>{{ list_ui.hub }}</h2>
+          <p>{{ list_ui.hub_desc }}</p>
+          <div class="pl-hub-search"><span>⌕</span><input placeholder="{{ list_ui.search_extensions }}"></div>
+          <div class="pl-hub-stats">
+            <span><b>{{ total_extensions }}</b> {{ list_ui.total_extensions }}</span>
+            <span><b>{{ active_users }}</b> {{ list_ui.active_users }}</span>
+            <span><b>{{ average_rating }}</b> {{ list_ui.average_rating }}</span>
+            <span><b>{{ new_this_week }}</b> {{ list_ui.new_this_week }}</span>
+          </div>
+        </div>
+        <div class="pl-hub-art" aria-hidden="true">
+          <span>🧩</span>
+          <span>🛡️</span>
+          <span>⚡</span>
+        </div>
+      </section>
+
+      <section id="categories" class="pl-category-cards">
+        {% for item in category_filters[:6] %}
+          <a href="{{ item.href }}"><span>✦</span><b>{{ item.label }}</b><small>{{ loop.index * 143 + 100 }} {{ list_ui.extensions }}</small></a>
+        {% endfor %}
+      </section>
+    </main>
+  </div>
+</body>
+</html>

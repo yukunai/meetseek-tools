@@ -1,0 +1,699 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+  .checkerboard {
+    background-image:
+      linear-gradient(45deg, rgba(148, 163, 184, .22) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(148, 163, 184, .22) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(148, 163, 184, .22) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(148, 163, 184, .22) 75%);
+    background-size: 22px 22px;
+    background-position: 0 0, 0 11px, 11px -11px, -11px 0;
+  }
+  .tool-field {
+    width: 100%;
+    border-radius: 1rem;
+    border: 1px solid rgb(226 232 240);
+    background: rgba(248, 250, 252, .9);
+    padding: .85rem 1rem;
+    font-size: .875rem;
+    font-weight: 800;
+    outline: none;
+    transition: .18s ease;
+  }
+  .tool-field:focus {
+    border-color: transparent;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, .18);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{{ tools_base_url }}/" class="mb-4 inline-flex items-center gap-1 text-sm font-bold text-slate-400 transition-colors hover:text-slate-700">← 返回 AI 工具箱</a>
+
+<section class="mb-6 rounded-[2rem] border border-white/60 bg-white/60 p-6 shadow-sm backdrop-blur-md">
+  <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700">Image Utility</span>
+  <h1 class="mt-4 text-4xl font-black leading-tight md:text-5xl">透明图生成器</h1>
+  <p class="mt-4 max-w-3xl text-sm font-bold leading-7 text-slate-500">上传图片后，可用本地颜色抠除或后端 AI 智能抠图生成透明 PNG/WebP。可以按自己的要求设置宽度、高度，也可以保持原比例自动缩放。</p>
+</section>
+
+<section class="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+  <aside class="glass soft rounded-[2rem] p-5">
+    <div class="rounded-3xl border border-dashed border-orange-200 bg-orange-50/45 p-5 text-center">
+      <input id="transparent-upload" class="hidden" type="file" accept="image/*">
+      <label for="transparent-upload" class="block cursor-pointer rounded-2xl bg-white/80 px-5 py-8 transition hover:bg-white">
+        <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-orange-600 text-2xl font-black text-white">＋</span>
+        <span class="mt-4 block text-base font-black text-slate-900">上传图片</span>
+        <span class="mt-2 block text-xs font-bold leading-5 text-slate-400">支持 JPG、PNG、WebP。图片只在浏览器本地处理。</span>
+      </label>
+    </div>
+
+      <div class="mt-5 space-y-5">
+      <div class="rounded-3xl bg-white/70 p-4 ring-1 ring-slate-100">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-black text-slate-900">裁剪图片</h2>
+            <p class="mt-1 text-xs font-bold text-slate-400">开启裁剪后，在原图上拖拽框选区域。</p>
+          </div>
+          <span id="transparent-crop-badge" class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">未开启</span>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button id="transparent-crop-toggle" class="rounded-2xl bg-slate-950 px-4 py-3 text-xs font-black text-white transition hover:bg-slate-800" type="button">开启裁剪</button>
+          <button id="transparent-crop-apply" class="rounded-2xl bg-orange-600 px-4 py-3 text-xs font-black text-white opacity-40 transition hover:bg-orange-700" type="button" disabled>应用裁剪</button>
+          <button id="transparent-crop-cancel" class="rounded-2xl bg-slate-100 px-4 py-3 text-xs font-black text-slate-600 transition hover:bg-slate-200" type="button">取消</button>
+        </div>
+        <div class="mt-3 grid grid-cols-4 gap-2">
+          <button class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200" data-crop-ratio="free" type="button">自由</button>
+          <button class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200" data-crop-ratio="1" type="button">1:1</button>
+          <button class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200" data-crop-ratio="1.7777777778" type="button">16:9</button>
+          <button class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200" data-crop-ratio="0.5625" type="button">9:16</button>
+        </div>
+        <div class="mt-4 rounded-2xl bg-slate-50 p-3">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="text-xs font-black text-slate-500">裁剪宽
+              <input id="transparent-crop-width" class="tool-field mt-2" type="number" min="1" max="8000" placeholder="如 1200">
+            </label>
+            <label class="text-xs font-black text-slate-500">裁剪高
+              <input id="transparent-crop-height" class="tool-field mt-2" type="number" min="1" max="8000" placeholder="如 800">
+            </label>
+          </div>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button id="transparent-crop-custom-ratio" class="rounded-2xl bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100" type="button">按宽高比例框选</button>
+            <button id="transparent-crop-custom-output" class="rounded-2xl bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100" type="button">设为输出尺寸</button>
+          </div>
+          <p class="mt-2 text-xs font-bold leading-5 text-slate-400">例如填 900 × 600，可按 3:2 比例裁剪，也可以裁剪后直接输出为 900 × 600。</p>
+        </div>
+      </div>
+
+      <div class="rounded-3xl bg-white/70 p-4 ring-1 ring-slate-100">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-black text-slate-900">背景色取样</h2>
+            <p class="mt-1 text-xs font-bold text-slate-400">点击预览图中的背景位置取色。</p>
+          </div>
+          <span id="transparent-color-dot" class="h-9 w-9 rounded-full border border-slate-200 bg-white shadow-inner"></span>
+        </div>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          <label class="text-xs font-black text-slate-500">容差 <span id="transparent-tolerance-value" class="text-orange-600">32</span>
+            <input id="transparent-tolerance" class="mt-2 w-full accent-orange-600" type="range" min="0" max="120" value="32">
+          </label>
+          <label class="text-xs font-black text-slate-500">柔边 <span id="transparent-softness-value" class="text-orange-600">14</span>
+            <input id="transparent-softness" class="mt-2 w-full accent-orange-600" type="range" min="0" max="80" value="14">
+          </label>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button class="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200" data-preset-color="#ffffff" type="button">白底</button>
+          <button class="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200" data-preset-color="#f8fafc" type="button">浅灰底</button>
+          <button class="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200" data-preset-color="#000000" type="button">黑底</button>
+          <button id="transparent-reset-color" class="rounded-full bg-orange-50 px-3 py-2 text-xs font-black text-orange-700 transition hover:bg-orange-100" type="button">重新取样</button>
+        </div>
+      </div>
+
+      <div class="rounded-3xl bg-white/70 p-4 ring-1 ring-slate-100">
+        <h2 class="text-sm font-black text-slate-900">输出尺寸</h2>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          <label class="text-xs font-black text-slate-500">宽度 px
+            <input id="transparent-width" class="tool-field mt-2" type="number" min="1" max="8000" placeholder="自动">
+          </label>
+          <label class="text-xs font-black text-slate-500">高度 px
+            <input id="transparent-height" class="tool-field mt-2" type="number" min="1" max="8000" placeholder="自动">
+          </label>
+        </div>
+        <label class="mt-4 flex cursor-pointer items-center justify-between rounded-2xl bg-slate-50 p-4">
+          <span>
+            <span class="block text-sm font-black text-slate-800">保持图片比例</span>
+            <span class="mt-1 block text-xs font-bold text-slate-400">只改宽或高时自动换算另一边。</span>
+          </span>
+          <input id="transparent-keep-ratio" class="h-5 w-5 accent-orange-600" type="checkbox" checked>
+        </label>
+        <div class="mt-4 grid grid-cols-3 gap-2">
+          <button class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200" data-size-preset="512x512" type="button">512</button>
+          <button class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200" data-size-preset="1024x1024" type="button">1024</button>
+          <button class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200" data-size-preset="original" type="button">原图</button>
+        </div>
+      </div>
+
+      <div class="rounded-3xl bg-white/70 p-4 ring-1 ring-slate-100">
+        <h2 class="text-sm font-black text-slate-900">导出格式</h2>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <label class="flex cursor-pointer items-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-black text-orange-700">
+            <input name="transparent-format" type="radio" value="image/png" checked class="accent-orange-600"> PNG
+          </label>
+          <label class="flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600">
+            <input name="transparent-format" type="radio" value="image/webp" class="accent-orange-600"> WebP
+          </label>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button id="transparent-ai-run" class="flex-1 rounded-2xl bg-orange-600 px-5 py-4 text-sm font-black text-white transition hover:bg-orange-700" type="button">AI 智能抠图</button>
+        <button id="transparent-run" class="flex-1 rounded-2xl bg-slate-950 px-5 py-4 text-sm font-black text-white transition hover:bg-slate-800" type="button">本地颜色抠除</button>
+        <button id="transparent-clear" class="rounded-2xl bg-slate-100 px-5 py-4 text-sm font-black text-slate-600 transition hover:bg-slate-200" type="button">清空</button>
+      </div>
+      <p id="transparent-status" class="min-h-6 text-sm font-bold text-slate-500"></p>
+    </div>
+  </aside>
+
+  <section class="glass soft rounded-[2rem] p-5">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 class="text-xl font-black">预览与下载</h2>
+        <p id="transparent-meta" class="mt-1 text-xs font-bold text-slate-400">等待上传图片</p>
+      </div>
+      <a id="transparent-download" class="pointer-events-none rounded-2xl bg-slate-200 px-5 py-3 text-sm font-black text-slate-400" href="#" download="meetseek-transparent.png">下载透明图</a>
+    </div>
+
+    <div class="mt-5 grid gap-5 lg:grid-cols-2">
+      <div>
+        <p class="mb-2 text-sm font-black text-slate-600">原图</p>
+        <div class="checkerboard grid min-h-[360px] place-items-center overflow-hidden rounded-3xl border border-slate-200 bg-white/70 p-4">
+          <canvas id="transparent-source-canvas" class="max-h-[620px] max-w-full cursor-crosshair rounded-2xl"></canvas>
+          <p id="transparent-source-empty" class="text-sm font-bold text-slate-400">上传后可点击图片背景取色</p>
+        </div>
+      </div>
+      <div>
+        <p class="mb-2 text-sm font-black text-slate-600">透明结果</p>
+        <div class="checkerboard grid min-h-[360px] place-items-center overflow-hidden rounded-3xl border border-slate-200 bg-white/70 p-4">
+          <canvas id="transparent-output-canvas" class="max-h-[620px] max-w-full rounded-2xl"></canvas>
+          <p id="transparent-output-empty" class="text-sm font-bold text-slate-400">生成后显示透明底结果</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<script>
+  (function () {
+    const upload = document.getElementById("transparent-upload");
+    const sourceCanvas = document.getElementById("transparent-source-canvas");
+    const outputCanvas = document.getElementById("transparent-output-canvas");
+    const sourceCtx = sourceCanvas.getContext("2d");
+    const outputCtx = outputCanvas.getContext("2d");
+    const sourceEmpty = document.getElementById("transparent-source-empty");
+    const outputEmpty = document.getElementById("transparent-output-empty");
+    const widthInput = document.getElementById("transparent-width");
+    const heightInput = document.getElementById("transparent-height");
+    const keepRatio = document.getElementById("transparent-keep-ratio");
+    const tolerance = document.getElementById("transparent-tolerance");
+    const softness = document.getElementById("transparent-softness");
+    const status = document.getElementById("transparent-status");
+    const meta = document.getElementById("transparent-meta");
+    const download = document.getElementById("transparent-download");
+    const colorDot = document.getElementById("transparent-color-dot");
+    const toleranceValue = document.getElementById("transparent-tolerance-value");
+    const softnessValue = document.getElementById("transparent-softness-value");
+    let image = null;
+    let sourceFile = null;
+    let imageName = "meetseek-transparent";
+    let sampleColor = { r: 255, g: 255, b: 255 };
+    let ratioLock = false;
+    let activeObjectUrl = "";
+    let cropMode = false;
+    let cropDragging = false;
+    let cropStart = null;
+    let cropRect = null;
+    let cropRatio = null;
+    const cropToggle = document.getElementById("transparent-crop-toggle");
+    const cropApply = document.getElementById("transparent-crop-apply");
+    const cropCancel = document.getElementById("transparent-crop-cancel");
+    const cropBadge = document.getElementById("transparent-crop-badge");
+    const cropWidthInput = document.getElementById("transparent-crop-width");
+    const cropHeightInput = document.getElementById("transparent-crop-height");
+
+    function setStatus(text, tone = "slate") {
+      status.textContent = text;
+      status.className = `min-h-6 text-sm font-bold text-${tone}-600`;
+    }
+
+    function colorToCss(color) {
+      return `rgb(${color.r}, ${color.g}, ${color.b})`;
+    }
+
+    function updateColorDot() {
+      colorDot.style.backgroundColor = colorToCss(sampleColor);
+    }
+
+    function setCanvasSize(canvas, width, height) {
+      canvas.width = Math.max(1, Math.round(width));
+      canvas.height = Math.max(1, Math.round(height));
+    }
+
+    function drawSource() {
+      if (!image) return;
+      setCanvasSize(sourceCanvas, image.width, image.height);
+      sourceCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
+      sourceCtx.drawImage(image, 0, 0);
+      drawCropOverlay();
+      sourceEmpty.classList.add("hidden");
+      meta.textContent = `原图 ${image.width} × ${image.height}px`;
+    }
+
+    function normalizedCropRect(rect) {
+      if (!rect) return null;
+      const x = Math.max(0, Math.min(rect.x, rect.x + rect.width));
+      const y = Math.max(0, Math.min(rect.y, rect.y + rect.height));
+      const right = Math.min(sourceCanvas.width, Math.max(rect.x, rect.x + rect.width));
+      const bottom = Math.min(sourceCanvas.height, Math.max(rect.y, rect.y + rect.height));
+      const width = Math.max(0, right - x);
+      const height = Math.max(0, bottom - y);
+      if (width < 6 || height < 6) return null;
+      return { x, y, width, height };
+    }
+
+    function updateCropButtons() {
+      const hasRect = Boolean(normalizedCropRect(cropRect));
+      cropApply.disabled = !hasRect;
+      cropApply.classList.toggle("opacity-40", !hasRect);
+      cropApply.classList.toggle("cursor-not-allowed", !hasRect);
+      cropBadge.textContent = cropMode ? (hasRect ? "已框选" : "裁剪中") : "未开启";
+      cropBadge.className = cropMode
+        ? "rounded-full bg-orange-100 px-3 py-1 text-xs font-black text-orange-700"
+        : "rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500";
+      cropToggle.textContent = cropMode ? "退出裁剪" : "开启裁剪";
+      sourceCanvas.classList.toggle("cursor-crosshair", !cropMode);
+      sourceCanvas.classList.toggle("cursor-cell", cropMode);
+    }
+
+    function drawCropOverlay() {
+      const rect = normalizedCropRect(cropRect);
+      if (!cropMode || !rect) return;
+      sourceCtx.save();
+      sourceCtx.fillStyle = "rgba(15, 23, 42, .52)";
+      sourceCtx.fillRect(0, 0, sourceCanvas.width, sourceCanvas.height);
+      sourceCtx.clearRect(rect.x, rect.y, rect.width, rect.height);
+      sourceCtx.drawImage(image, rect.x, rect.y, rect.width, rect.height, rect.x, rect.y, rect.width, rect.height);
+      sourceCtx.strokeStyle = "rgba(249, 115, 22, .98)";
+      sourceCtx.lineWidth = Math.max(2, sourceCanvas.width / 600);
+      sourceCtx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+      sourceCtx.fillStyle = "rgba(249, 115, 22, .98)";
+      const label = `${Math.round(rect.width)} × ${Math.round(rect.height)}`;
+      sourceCtx.font = `${Math.max(14, sourceCanvas.width / 55)}px sans-serif`;
+      const metrics = sourceCtx.measureText(label);
+      sourceCtx.fillRect(rect.x, Math.max(0, rect.y - 30), metrics.width + 18, 26);
+      sourceCtx.fillStyle = "white";
+      sourceCtx.fillText(label, rect.x + 9, Math.max(18, rect.y - 10));
+      sourceCtx.restore();
+    }
+
+    function canvasPoint(event) {
+      const rect = sourceCanvas.getBoundingClientRect();
+      return {
+        x: Math.max(0, Math.min(sourceCanvas.width, (event.clientX - rect.left) * (sourceCanvas.width / rect.width))),
+        y: Math.max(0, Math.min(sourceCanvas.height, (event.clientY - rect.top) * (sourceCanvas.height / rect.height)))
+      };
+    }
+
+    function buildCropRect(start, end) {
+      let width = end.x - start.x;
+      let height = end.y - start.y;
+      if (cropRatio) {
+        const signX = width < 0 ? -1 : 1;
+        const signY = height < 0 ? -1 : 1;
+        const absWidth = Math.abs(width);
+        const absHeight = Math.abs(height);
+        if (absWidth / Math.max(1, absHeight) > cropRatio) {
+          width = signX * absHeight * cropRatio;
+        } else {
+          height = signY * absWidth / cropRatio;
+        }
+      }
+      return { x: start.x, y: start.y, width, height };
+    }
+
+    function cropCustomSize() {
+      const width = Number(cropWidthInput.value);
+      const height = Number(cropHeightInput.value);
+      if (!width || !height || width < 1 || height < 1 || width > 8000 || height > 8000) {
+        setStatus("请填写有效的自定义裁剪宽高，范围 1-8000。", "orange");
+        return null;
+      }
+      return { width, height };
+    }
+
+    function sourceCanvasBlob() {
+      return new Promise((resolve, reject) => {
+        if (!image) {
+          reject(new Error("请先上传图片。"));
+          return;
+        }
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        ctx.drawImage(image, 0, 0);
+        canvas.toBlob((blob) => {
+          if (!blob) reject(new Error("图片转换失败。"));
+          else resolve(blob);
+        }, "image/png");
+      });
+    }
+
+    function outputDimensions() {
+      if (!image) return { width: 0, height: 0 };
+      let width = Number(widthInput.value);
+      let height = Number(heightInput.value);
+      if (!width && !height) return { width: image.width, height: image.height };
+      if (keepRatio.checked) {
+        if (width && !height) height = Math.round(width / (image.width / image.height));
+        if (height && !width) width = Math.round(height * (image.width / image.height));
+      }
+      return { width: width || image.width, height: height || image.height };
+    }
+
+    function syncRatio(changed) {
+      if (!image || !keepRatio.checked || ratioLock) return;
+      ratioLock = true;
+      const ratio = image.width / image.height;
+      if (changed === "width" && Number(widthInput.value)) {
+        heightInput.value = Math.round(Number(widthInput.value) / ratio);
+      }
+      if (changed === "height" && Number(heightInput.value)) {
+        widthInput.value = Math.round(Number(heightInput.value) * ratio);
+      }
+      ratioLock = false;
+    }
+
+    function removeBackground() {
+      if (!image) {
+        setStatus("请先上传图片。", "orange");
+        return;
+      }
+      const { width, height } = outputDimensions();
+      setCanvasSize(outputCanvas, width, height);
+      outputCtx.clearRect(0, 0, width, height);
+      outputCtx.drawImage(image, 0, 0, width, height);
+      const imageData = outputCtx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+      const hard = Number(tolerance.value);
+      const feather = Number(softness.value);
+      const maxDistance = Math.max(1, hard + feather);
+      for (let i = 0; i < data.length; i += 4) {
+        const dr = data[i] - sampleColor.r;
+        const dg = data[i + 1] - sampleColor.g;
+        const db = data[i + 2] - sampleColor.b;
+        const distance = Math.sqrt(dr * dr + dg * dg + db * db);
+        if (distance <= hard) {
+          data[i + 3] = 0;
+        } else if (feather > 0 && distance <= maxDistance) {
+          const alphaRatio = (distance - hard) / feather;
+          data[i + 3] = Math.round(data[i + 3] * alphaRatio);
+        }
+      }
+      outputCtx.putImageData(imageData, 0, 0);
+      outputEmpty.classList.add("hidden");
+      const format = document.querySelector("input[name='transparent-format']:checked").value;
+      const ext = format === "image/webp" ? "webp" : "png";
+      const href = outputCanvas.toDataURL(format, 0.92);
+      download.href = href;
+      download.download = `${imageName}-transparent-${width}x${height}.${ext}`;
+      download.className = "rounded-2xl bg-orange-600 px-5 py-3 text-sm font-black text-white transition hover:bg-orange-700";
+      download.classList.remove("pointer-events-none");
+      setStatus(`已生成透明图：${width} × ${height}px`, "emerald");
+    }
+
+    async function aiRemoveBackground() {
+      if (!image) {
+        setStatus("请先上传图片。", "orange");
+        return;
+      }
+      const { width, height } = outputDimensions();
+      const format = document.querySelector("input[name='transparent-format']:checked").value === "image/webp" ? "webp" : "png";
+      const form = new FormData();
+      const sourceBlob = await sourceCanvasBlob();
+      form.append("image", sourceBlob, `${imageName}-source.png`);
+      form.append("width", String(width || ""));
+      form.append("height", String(height || ""));
+      form.append("keep_ratio", keepRatio.checked ? "true" : "false");
+      form.append("output_format", format);
+      setStatus("AI 正在智能抠图，复杂图片可能需要几十秒...", "orange");
+      try {
+        const response = await fetch("/api/image/remove-background", { method: "POST", body: form });
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.detail || "AI 抠图失败");
+        }
+        const blob = await response.blob();
+        if (activeObjectUrl) URL.revokeObjectURL(activeObjectUrl);
+        activeObjectUrl = URL.createObjectURL(blob);
+        const resultImage = new Image();
+        resultImage.onload = () => {
+          setCanvasSize(outputCanvas, resultImage.width, resultImage.height);
+          outputCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+          outputCtx.drawImage(resultImage, 0, 0);
+          outputEmpty.classList.add("hidden");
+          download.href = activeObjectUrl;
+          download.download = `${imageName}-ai-transparent-${resultImage.width}x${resultImage.height}.${format}`;
+          download.className = "rounded-2xl bg-orange-600 px-5 py-3 text-sm font-black text-white transition hover:bg-orange-700";
+          download.classList.remove("pointer-events-none");
+          setStatus(`AI 抠图完成：${resultImage.width} × ${resultImage.height}px`, "emerald");
+        };
+        resultImage.src = activeObjectUrl;
+      } catch (error) {
+        setStatus(error.message || "AI 抠图失败，请稍后再试。", "rose");
+      }
+    }
+
+    upload.addEventListener("change", () => {
+      const file = upload.files && upload.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        setStatus("请选择图片文件。", "orange");
+        return;
+      }
+      sourceFile = file;
+      imageName = (file.name || "meetseek").replace(/\.[^.]+$/, "");
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        image = img;
+        cropMode = false;
+        cropDragging = false;
+        cropStart = null;
+        cropRect = null;
+        widthInput.value = img.width;
+        heightInput.value = img.height;
+        updateCropButtons();
+        drawSource();
+        removeBackground();
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    });
+
+    sourceCanvas.addEventListener("mousedown", (event) => {
+      if (!image || !cropMode) return;
+      cropDragging = true;
+      cropStart = canvasPoint(event);
+      cropRect = { x: cropStart.x, y: cropStart.y, width: 0, height: 0 };
+      updateCropButtons();
+      drawSource();
+    });
+
+    sourceCanvas.addEventListener("mousemove", (event) => {
+      if (!image || !cropMode || !cropDragging || !cropStart) return;
+      cropRect = buildCropRect(cropStart, canvasPoint(event));
+      drawSource();
+      updateCropButtons();
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (!cropDragging) return;
+      cropDragging = false;
+      cropRect = normalizedCropRect(cropRect);
+      drawSource();
+      updateCropButtons();
+    });
+
+    sourceCanvas.addEventListener("click", (event) => {
+      if (!image || cropMode) return;
+      const point = canvasPoint(event);
+      const x = Math.floor(point.x);
+      const y = Math.floor(point.y);
+      const pixel = sourceCtx.getImageData(x, y, 1, 1).data;
+      sampleColor = { r: pixel[0], g: pixel[1], b: pixel[2] };
+      updateColorDot();
+      removeBackground();
+    });
+
+    document.querySelectorAll("[data-preset-color]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const hex = button.dataset.presetColor.replace("#", "");
+        sampleColor = {
+          r: parseInt(hex.slice(0, 2), 16),
+          g: parseInt(hex.slice(2, 4), 16),
+          b: parseInt(hex.slice(4, 6), 16)
+        };
+        updateColorDot();
+        removeBackground();
+      });
+    });
+
+    document.querySelectorAll("[data-size-preset]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!image) return;
+        const preset = button.dataset.sizePreset;
+        if (preset === "original") {
+          widthInput.value = image.width;
+          heightInput.value = image.height;
+        } else {
+          const [width, height] = preset.split("x");
+          widthInput.value = width;
+          heightInput.value = height;
+        }
+        removeBackground();
+      });
+    });
+
+    document.querySelectorAll("[data-crop-ratio]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const value = button.dataset.cropRatio;
+        cropRatio = value === "free" ? null : Number(value);
+        document.querySelectorAll("[data-crop-ratio]").forEach((item) => {
+          item.classList.remove("bg-orange-100", "text-orange-700");
+          item.classList.add("bg-slate-100", "text-slate-600");
+        });
+        button.classList.remove("bg-slate-100", "text-slate-600");
+        button.classList.add("bg-orange-100", "text-orange-700");
+        if (cropMode && cropStart && cropRect) {
+          cropRect = null;
+          drawSource();
+          updateCropButtons();
+        }
+      });
+    });
+
+    document.getElementById("transparent-crop-custom-ratio").addEventListener("click", () => {
+      const size = cropCustomSize();
+      if (!size) return;
+      cropRatio = size.width / size.height;
+      document.querySelectorAll("[data-crop-ratio]").forEach((item) => {
+        item.classList.remove("bg-orange-100", "text-orange-700");
+        item.classList.add("bg-slate-100", "text-slate-600");
+      });
+      cropMode = true;
+      cropDragging = false;
+      cropStart = null;
+      cropRect = null;
+      drawSource();
+      updateCropButtons();
+      setStatus(`已设置自定义裁剪比例 ${size.width}:${size.height}，请在原图上拖拽框选。`, "orange");
+    });
+
+    document.getElementById("transparent-crop-custom-output").addEventListener("click", () => {
+      const size = cropCustomSize();
+      if (!size) return;
+      widthInput.value = size.width;
+      heightInput.value = size.height;
+      keepRatio.checked = false;
+      cropRatio = size.width / size.height;
+      cropMode = true;
+      cropDragging = false;
+      cropStart = null;
+      cropRect = null;
+      drawSource();
+      updateCropButtons();
+      setStatus(`已设置输出尺寸 ${size.width} × ${size.height}px，请拖拽框选裁剪区域。`, "orange");
+    });
+
+    cropToggle.addEventListener("click", () => {
+      if (!image) {
+        setStatus("请先上传图片。", "orange");
+        return;
+      }
+      cropMode = !cropMode;
+      cropDragging = false;
+      cropStart = null;
+      cropRect = null;
+      drawSource();
+      updateCropButtons();
+      setStatus(cropMode ? "裁剪已开启，请在原图上拖拽框选区域。" : "裁剪已关闭。", cropMode ? "orange" : "slate");
+    });
+
+    cropCancel.addEventListener("click", () => {
+      cropMode = false;
+      cropDragging = false;
+      cropStart = null;
+      cropRect = null;
+      drawSource();
+      updateCropButtons();
+      setStatus("已取消裁剪。", "slate");
+    });
+
+    cropApply.addEventListener("click", () => {
+      const rect = normalizedCropRect(cropRect);
+      if (!image || !rect) return;
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = Math.round(rect.width);
+      canvas.height = Math.round(rect.height);
+      ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height, 0, 0, canvas.width, canvas.height);
+      const nextImage = new Image();
+      nextImage.onload = () => {
+        image = nextImage;
+        sourceFile = null;
+        cropMode = false;
+        cropDragging = false;
+        cropStart = null;
+        cropRect = null;
+        widthInput.value = image.width;
+        heightInput.value = image.height;
+        drawSource();
+        updateCropButtons();
+        removeBackground();
+        setStatus(`已裁剪为 ${image.width} × ${image.height}px。`, "emerald");
+      };
+      nextImage.src = canvas.toDataURL("image/png");
+    });
+
+    widthInput.addEventListener("input", () => { syncRatio("width"); });
+    heightInput.addEventListener("input", () => { syncRatio("height"); });
+    [widthInput, heightInput, tolerance, softness, keepRatio].forEach((element) => {
+      element.addEventListener("input", () => {
+        toleranceValue.textContent = tolerance.value;
+        softnessValue.textContent = softness.value;
+        removeBackground();
+      });
+      element.addEventListener("change", removeBackground);
+    });
+    document.getElementById("transparent-ai-run").addEventListener("click", aiRemoveBackground);
+    document.getElementById("transparent-run").addEventListener("click", removeBackground);
+    document.getElementById("transparent-clear").addEventListener("click", () => {
+      upload.value = "";
+      image = null;
+      sourceFile = null;
+      cropMode = false;
+      cropDragging = false;
+      cropStart = null;
+      cropRect = null;
+      sourceCanvas.width = 0;
+      sourceCanvas.height = 0;
+      outputCanvas.width = 0;
+      outputCanvas.height = 0;
+      if (activeObjectUrl) {
+        URL.revokeObjectURL(activeObjectUrl);
+        activeObjectUrl = "";
+      }
+      widthInput.value = "";
+      heightInput.value = "";
+      cropWidthInput.value = "";
+      cropHeightInput.value = "";
+      sourceEmpty.classList.remove("hidden");
+      outputEmpty.classList.remove("hidden");
+      download.href = "#";
+      download.className = "pointer-events-none rounded-2xl bg-slate-200 px-5 py-3 text-sm font-black text-slate-400";
+      meta.textContent = "等待上传图片";
+      setStatus("");
+      updateCropButtons();
+    });
+    document.getElementById("transparent-reset-color").addEventListener("click", () => {
+      sampleColor = { r: 255, g: 255, b: 255 };
+      updateColorDot();
+      removeBackground();
+    });
+    updateColorDot();
+    updateCropButtons();
+  })();
+</script>
+{% endblock %}

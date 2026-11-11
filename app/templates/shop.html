@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="space-y-6">
+  <a href="{{ main_base_url }}/" class="inline-flex items-center gap-1 text-sm font-bold text-slate-400 transition-colors hover:text-slate-700">← 返回主站</a>
+
+  <section class="rounded-3xl border border-white/60 bg-white/75 p-7 shadow-sm backdrop-blur-md md:p-10">
+    <div class="max-w-4xl">
+      <div>
+        <h1 class="max-w-3xl text-4xl font-black tracking-tight text-slate-950 md:text-6xl">商城</h1>
+        <p class="mt-5 max-w-2xl text-base leading-8 text-slate-500">浏览商品、提交订单，订单记录请到会员中心查看。</p>
+      </div>
+    </div>
+  </section>
+
+  {% if categories %}
+  <nav class="flex flex-wrap gap-2 rounded-3xl border border-slate-100 bg-white p-3 shadow-sm">
+    <button type="button" data-category-filter="all" class="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white">全部商品</button>
+    {% for category in categories %}
+    <button type="button" data-category-filter="{{ category.slug }}" class="rounded-2xl bg-slate-50 px-4 py-2 text-sm font-black text-slate-600 transition hover:bg-orange-50 hover:text-orange-600">{{ category.name }}</button>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  <div>
+    <section id="all-products" class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      {% if products %}
+        {% for product in products %}
+        <article id="product-{{ product.id }}" data-category="{{ product.category.slug }}" class="flex min-h-[360px] flex-col overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+          <a href="{{ shop_base_url }}/products/{{ product.slug }}" class="block">
+          {% if product.cover_image %}
+          <img src="{{ product.cover_image }}" alt="{{ product.title }}" loading="lazy" class="h-48 w-full object-cover transition duration-500 hover:scale-[1.02]">
+          {% else %}
+          <div class="grid h-48 place-items-center bg-gradient-to-br from-slate-50 via-orange-50 to-emerald-50">
+            <span class="grid h-16 w-16 place-items-center rounded-2xl bg-slate-950 text-xl font-black text-white">M</span>
+          </div>
+          {% endif %}
+          </a>
+          {% if product.gallery_images and product.gallery_images|length > 1 %}
+          <div class="flex gap-2 border-b border-slate-100 bg-white px-4 py-3">
+            {% for image in product.gallery_images[:5] %}
+            <img src="{{ image }}" alt="{{ product.title }} 商品图 {{ loop.index }}" loading="lazy" class="h-12 w-12 rounded-xl border border-slate-100 object-cover">
+            {% endfor %}
+          </div>
+          {% endif %}
+          <div class="flex flex-1 flex-col p-6">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <a href="{{ shop_base_url }}/products/{{ product.slug }}" class="group block">
+                  <h2 class="text-2xl font-black leading-tight text-slate-950 transition group-hover:text-orange-600">{{ product.title }}</h2>
+                </a>
+              </div>
+              <span class="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">{{ product.stock_label }}</span>
+            </div>
+            {% if product.subtitle %}
+            <p class="mt-3 text-sm font-bold leading-6 text-slate-500">{{ product.subtitle }}</p>
+            {% endif %}
+            {% if product.description %}
+            <p class="mt-3 line-clamp-3 text-sm leading-6 text-slate-500">{{ product.description }}</p>
+            {% endif %}
+            <div class="mt-auto pt-6">
+              <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  {% if product.price_cents > 0 %}
+                  <p class="text-3xl font-black text-slate-950">¥{{ product.price_yuan }}</p>
+                  {% endif %}
+                  {% if product.price_cents == 0 %}
+                  <p class="text-3xl font-black text-slate-950">免费</p>
+                  {% endif %}
+                </div>
+                {% if current_user %}
+                <form data-shop-order class="flex items-center gap-2">
+                  <input type="hidden" name="product_id" value="{{ product.id }}">
+                  <input class="h-11 w-16 rounded-2xl border border-slate-200 bg-white px-3 text-center text-sm font-black outline-none focus:ring-2 focus:ring-slate-900" name="quantity" type="number" min="1" max="99" value="1" aria-label="数量">
+                  <input type="hidden" name="payment_method" value="manual">
+                  <button class="h-11 rounded-2xl bg-slate-950 px-5 text-sm font-black text-white transition hover:bg-orange-600" type="submit">下单</button>
+                </form>
+                {% else %}
+                <a href="{{ main_base_url }}/login" class="h-11 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-orange-600">登录后下单</a>
+                {% endif %}
+              </div>
+              {% if product.fulfillment_note %}
+              <p class="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-xs font-bold leading-5 text-slate-500">{{ product.fulfillment_note }}</p>
+              {% endif %}
+              <p class="shop-order-message mt-3 min-h-5 text-sm font-bold"></p>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      {% else %}
+      <div class="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center md:col-span-2">
+        <p class="text-2xl font-black text-slate-950">暂无上架商品</p>
+        <p class="mt-3 text-sm leading-6 text-slate-500">商品准备好并上架后，会自动显示在这里。</p>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("click", function (event) {
+    const filter = event.target.closest("[data-category-filter]");
+    if (!filter) return;
+    const category = filter.dataset.categoryFilter || "all";
+    document.querySelectorAll("[data-category-filter]").forEach((item) => {
+      const active = item === filter;
+      item.className = active
+        ? "rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white"
+        : "rounded-2xl bg-slate-50 px-4 py-2 text-sm font-black text-slate-600 transition hover:bg-orange-50 hover:text-orange-600";
+    });
+    document.querySelectorAll("[data-category]").forEach((card) => {
+      card.classList.toggle("hidden", category !== "all" && card.dataset.category !== category);
+    });
+  });
+
+  document.addEventListener("submit", async function (event) {
+    const form = event.target.closest("form[data-shop-order]");
+    if (!form) return;
+    event.preventDefault();
+    const message = form.closest("article")?.querySelector(".shop-order-message");
+    const button = form.querySelector("button[type='submit']");
+    const oldText = button ? button.textContent : "";
+    if (button) {
+      button.disabled = true;
+      button.textContent = "处理中...";
+    }
+    if (message) {
+      message.textContent = "";
+      message.className = "shop-order-message mt-3 min-h-5 text-sm font-bold";
+    }
+    try {
+      const response = await fetch("/api/shop/orders", {
+        method: "POST",
+        body: new FormData(form),
+        credentials: "same-origin"
+      });
+      if (response.status === 401) {
+        window.location.href = "{{ main_base_url }}/login";
+        return;
+      }
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.detail || "下单失败");
+      if (payload.payment_url) {
+        window.location.href = payload.payment_url;
+        return;
+      }
+      if (message) {
+        message.textContent = payload.delivery_sent ? "订单已完成，交付内容已发送到邮箱" : "订单已提交";
+        message.classList.add("text-emerald-600");
+      }
+    } catch (error) {
+      if (message) {
+        message.textContent = error.message || "下单失败";
+        message.classList.add("text-red-600");
+      }
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+  mark.sim-hit { background: #fef08a; box-decoration-break: clone; -webkit-box-decoration-break: clone; color: #713f12; padding: 0 .12rem; border-radius: .28rem; }
+  mark.sim-struct { background: #fed7aa; box-decoration-break: clone; -webkit-box-decoration-break: clone; color: #7c2d12; padding: 0 .12rem; border-radius: .28rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="space-y-6">
+  <a href="{{ main_base_url }}/" class="inline-flex items-center gap-1 text-sm font-bold text-slate-400 transition-colors hover:text-slate-700">← 返回主站大本营</a>
+
+  <section class="rounded-[2rem] border border-white/60 bg-white/70 p-6 shadow-sm backdrop-blur-md md:p-8">
+    <span class="rounded-full bg-orange-100 px-3 py-1 text-xs font-black text-orange-700">Article Similarity</span>
+    <h1 class="mt-4 text-4xl font-black tracking-tight text-slate-950 md:text-5xl">文章相似度检查</h1>
+    <p class="mt-4 max-w-3xl text-sm font-bold leading-7 text-slate-500">左右两篇文章可以粘贴原文，也可以先从链接提取正文。检测后输出全文相似度、语言结构相似度，并在右侧用黄色标出硬重复、橙色标出句式结构相似。</p>
+  </section>
+
+  <section class="grid gap-5 xl:grid-cols-2">
+    <article class="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-black text-slate-950">左侧原文</h2>
+          <p class="mt-1 text-xs font-bold text-slate-400">作为对比基准</p>
+        </div>
+        <button class="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white transition hover:bg-orange-600" type="button" data-extract="left">提取原文链接</button>
+      </div>
+      <input id="left-url" class="mt-4 h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-slate-900" placeholder="粘贴左侧文章链接，可选">
+      <textarea id="left-text" class="mt-4 min-h-[520px] w-full resize-y rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm font-medium leading-7 text-slate-700 outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-slate-900" placeholder="这里会显示提取出的文章内容，也可以直接粘贴内容进去。"></textarea>
+      <p id="left-status" class="mt-3 min-h-5 text-sm font-bold text-slate-400"></p>
+    </article>
+
+    <article class="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-black text-slate-950">右侧待检测文章</h2>
+          <p class="mt-1 text-xs font-bold text-slate-400">相似片段会在这里高亮</p>
+        </div>
+        <button class="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white transition hover:bg-orange-600" type="button" data-extract="right">提取原文链接</button>
+      </div>
+      <input id="right-url" class="mt-4 h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-slate-900" placeholder="粘贴右侧文章链接，可选">
+      <textarea id="right-text" class="mt-4 min-h-[520px] w-full resize-y rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm font-medium leading-7 text-slate-700 outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-slate-900" placeholder="这里会显示提取出的文章内容，也可以直接粘贴内容进去。"></textarea>
+      <div id="right-highlight" class="mt-4 hidden min-h-[520px] max-h-[760px] overflow-auto whitespace-pre-wrap rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm font-medium leading-7 text-slate-700" title="点击返回编辑"></div>
+      <p id="right-status" class="mt-3 min-h-5 text-sm font-bold text-slate-400"></p>
+    </article>
+  </section>
+
+  <section class="rounded-[2rem] border border-white/60 bg-white/75 p-5 shadow-sm backdrop-blur-md">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <button id="check-similarity" class="h-13 rounded-2xl bg-orange-600 px-7 py-4 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-700 hover:shadow-md" type="button">一键检测</button>
+      <div class="grid flex-1 gap-3 sm:grid-cols-2 lg:max-w-2xl">
+        <div class="rounded-3xl bg-slate-950 p-5 text-white">
+          <p class="text-xs font-black uppercase tracking-wide text-slate-400">全文相似度</p>
+          <p id="score-full" class="mt-2 text-4xl font-black">--%</p>
+        </div>
+        <div class="rounded-3xl bg-slate-50 p-5">
+          <p class="text-xs font-black uppercase tracking-wide text-slate-400">语言结构</p>
+          <p id="score-structure" class="mt-2 text-4xl font-black text-slate-950">--%</p>
+        </div>
+      </div>
+    </div>
+    <p id="similarity-note" class="mt-4 text-sm font-bold leading-6 text-slate-500">说明：核心相似度会先剔除官方称谓、企业/组织词和常见套话，再按 TF-IDF 余弦、连续超过 12 字雷同、句子覆盖和语言结构综合判断。右侧黄色=连续硬重复，橙色=句式/结构相似。</p>
+    <div id="plagiarism-result" class="mt-4 rounded-3xl border border-slate-100 bg-slate-50 p-5 text-sm font-black leading-7 text-slate-500">
+      判定结果：等待检测。文字相似度≥20% 或 剔除专有名词后语言结构重合度≥30%，认定为抄袭；未达到上述两项阈值，认定为非抄袭。
+    </div>
+  </section>
+</section>
+
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const leftText = $("left-text");
+  const rightText = $("right-text");
+  const rightHighlight = $("right-highlight");
+  const checkButton = $("check-similarity");
+
+  function setStatus(side, text, danger) {
+    const node = $(`${side}-status`);
+    node.textContent = text || "";
+    node.className = `mt-3 min-h-5 text-sm font-bold ${danger ? "text-red-600" : "text-slate-400"}`;
+  }
+
+  async function extract(side) {
+    const url = $(`${side}-url`).value.trim();
+    if (!url) {
+      setStatus(side, "请先粘贴文章链接", true);
+      return;
+    }
+    setStatus(side, "正在提取原文...");
+    try {
+      const response = await fetch(`/api/tools/extract-article?url=${encodeURIComponent(url)}`, { credentials: "same-origin" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.detail || "提取失败");
+      $(`${side}-text`).value = payload.article.content || "";
+      if (side === "right") resetRightPreview();
+      setStatus(side, payload.article.title ? `已提取：${payload.article.title}` : "已提取正文");
+    } catch (error) {
+      setStatus(side, error.message || "提取失败，请手动粘贴", true);
+    }
+  }
+
+  function escapeHtml(text) {
+    return (text || "").replace(/[&<>"']/g, (ch) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+    })[ch]);
+  }
+
+  function mergeSpans(spans) {
+    const sorted = (spans || []).filter((span) => span.end > span.start).sort((a, b) => a.start - b.start || b.end - a.end);
+    const merged = [];
+    for (const span of sorted) {
+      const last = merged[merged.length - 1];
+      if (!last || span.start > last.end) merged.push({ ...span });
+      else {
+        last.end = Math.max(last.end, span.end);
+        if (last.kind === "exact" || span.kind === "exact") last.kind = "exact";
+      }
+    }
+    return merged;
+  }
+
+  function rightHighlightHtml(text, spans) {
+    const merged = mergeSpans(spans);
+    if (!merged.length) return escapeHtml(text);
+    let cursor = 0;
+    let html = "";
+    merged.forEach((span) => {
+      html += escapeHtml(text.slice(cursor, span.start));
+      const klass = span.kind === "structure" ? "sim-struct" : "sim-hit";
+      html += `<mark class="${klass}">${escapeHtml(text.slice(span.start, span.end))}</mark>`;
+      cursor = span.end;
+    });
+    html += escapeHtml(text.slice(cursor));
+    return html;
+  }
+
+  function resetRightPreview() {
+    rightHighlight.classList.add("hidden");
+    rightText.classList.remove("hidden");
+  }
+
+  function showRightPreview(html) {
+    rightHighlight.innerHTML = html;
+    rightText.classList.add("hidden");
+    rightHighlight.classList.remove("hidden");
+  }
+
+  function percent(value) {
+    return `${Math.round(Math.max(0, Math.min(1, Number(value) || 0)) * 100)}%`;
+  }
+
+  function paintJudgement(payload) {
+    const node = $("plagiarism-result");
+    node.className = `mt-4 rounded-3xl border p-5 text-sm font-black leading-7 ${
+      payload.copied
+        ? "border-red-100 bg-red-50 text-red-700"
+        : "border-emerald-100 bg-emerald-50 text-emerald-700"
+    }`;
+    node.textContent = payload.final_message || payload.reason || "检测完成";
+  }
+
+  async function check() {
+    const left = leftText.value.trim();
+    const right = rightText.value.trim();
+    if (!left || !right) {
+      $("similarity-note").textContent = "请先填入左右两篇文章内容，或者通过链接提取正文。";
+      return;
+    }
+    checkButton.disabled = true;
+    checkButton.textContent = "检测中...";
+    checkButton.classList.add("opacity-70", "cursor-wait");
+    try {
+      const response = await fetch("/api/tools/article-similarity", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text_a: left, text_b: right })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.detail || "检测失败");
+      $("score-full").textContent = percent(payload.textual_similarity);
+      $("score-structure").textContent = percent(payload.structural_similarity);
+      paintJudgement(payload);
+      showRightPreview(rightHighlightHtml(right, payload.right_spans || []));
+      const exactCount = (payload.exact_spans || []).length;
+      const structureCount = (payload.structure_spans || []).length;
+      setStatus("right", (payload.right_spans || []).length ? `已标出 ${exactCount} 处硬重复、${structureCount} 处结构相似；点击高亮区域可继续编辑。` : "未发现可标出的硬重复或结构相似片段；点击原文区域可继续编辑。", false);
+      const engines = Array.isArray(payload.ner_engines) && payload.ner_engines.length ? payload.ner_engines.join(" + ") : "regex";
+      $("similarity-note").textContent = `检测完成：黄色=连续硬重复，橙色=句式/结构相似。后端已用 ${engines} 识别 PERSON/ORG/LOC，并统一替换为 [ENTITY_REPLACED] 影子文本。左侧实体 ${payload.entity_count_a || 0} 个，右侧实体 ${payload.entity_count_b || 0} 个；结构重合中的实体占比 ${percent(payload.entity_ratio)}。${payload.reason || ""}`;
+    } catch (error) {
+      $("similarity-note").textContent = error.message || "检测失败，请稍后再试。";
+      $("plagiarism-result").className = "mt-4 rounded-3xl border border-red-100 bg-red-50 p-5 text-sm font-black leading-7 text-red-700";
+      $("plagiarism-result").textContent = "检测失败：" + (error.message || "后端服务暂时不可用");
+    } finally {
+      checkButton.disabled = false;
+      checkButton.textContent = "一键检测";
+      checkButton.classList.remove("opacity-70", "cursor-wait");
+    }
+  }
+
+  document.querySelectorAll("[data-extract]").forEach((button) => {
+    button.addEventListener("click", () => extract(button.dataset.extract));
+  });
+  rightText.addEventListener("input", resetRightPreview);
+  rightHighlight.addEventListener("click", resetRightPreview);
+  checkButton.addEventListener("click", check);
+})();
+</script>
+{% endblock %}

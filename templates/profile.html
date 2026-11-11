@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% macro empty_state(message) %}
+<div class="rounded-[2rem] border border-slate-100 bg-white/85 p-10 text-center shadow-sm backdrop-blur-md md:col-span-2">
+  <div class="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-slate-100 text-slate-400">
+    <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-7.5A2.25 2.25 0 0 0 17.25 4.5H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5A2.25 2.25 0 0 0 6.75 19.5h7.5" />
+      <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9h7.5M8.25 12h4.5M18 18.75l1.5 1.5 3-3" />
+    </svg>
+  </div>
+  <p class="mt-5 text-lg font-black text-slate-700">这里空空如也</p>
+  <p class="mt-2 text-sm font-medium text-slate-400">{{ message }}</p>
+  <a class="mt-5 inline-flex text-sm font-black text-orange-600 hover:text-orange-700" href="/">去首页看看</a>
+</div>
+{% endmacro %}
+
+{% macro post_grid(items, empty_message) %}
+<div class="grid gap-4 md:grid-cols-2">
+  {% for post in items %}
+  <article class="group flex min-h-[230px] flex-col rounded-[2rem] border border-slate-100 bg-white/90 p-5 shadow-sm backdrop-blur-md transition duration-200 hover:-translate-y-1 hover:shadow-md">
+    <div class="flex items-center gap-3 text-xs font-black text-slate-400">
+      <span class="rounded-full bg-slate-100 px-2.5 py-1">{{ post.type }}</span>
+      <span>{{ post.category }}</span>
+    </div>
+    <a class="mt-4 block" href="{{ post.url }}">
+      <h3 class="text-2xl font-black leading-tight text-slate-950 group-hover:text-orange-600">{{ post.title }}</h3>
+      <p class="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-500">{{ post.summary }}</p>
+    </a>
+    <div class="mt-auto flex items-center justify-between pt-6 text-sm font-bold text-slate-500">
+      <div class="flex gap-4">
+        <span>赞 {{ post.like_count }}</span>
+        <span>评论 {{ post.comment_count }}</span>
+      </div>
+      <a class="rounded-full bg-slate-950 px-4 py-2 text-white transition hover:bg-orange-600" href="{{ post.url }}">阅读</a>
+    </div>
+  </article>
+  {% else %}
+  {{ empty_state(empty_message) }}
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% block content %}
+<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]" x-data="userProfile()">
+  <div class="min-w-0">
+    <section class="overflow-hidden rounded-[2rem] border border-slate-100 bg-white/90 shadow-sm backdrop-blur-md">
+      <div class="h-32 bg-gradient-to-r from-slate-100 to-orange-50"></div>
+      <div class="relative px-6 pb-7 md:px-8">
+        <a class="absolute right-6 top-5 grid h-11 w-11 place-items-center rounded-2xl text-slate-400 transition duration-300 hover:rotate-45 hover:bg-slate-100 hover:text-slate-700 md:right-8" href="/account" aria-label="设置">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.66.84.15.066.297.136.441.211.325.169.716.142 1.018-.064l1.064-.727a1.125 1.125 0 0 1 1.45.12l1.833 1.833c.39.39.44 1.002.12 1.45l-.727 1.064c-.206.302-.233.693-.064 1.018.075.144.145.291.211.441.154.347.466.597.84.66l1.281.213c.542.09.94.56.94 1.11v2.593c0 .55-.398 1.02-.94 1.11l-1.281.213a1.125 1.125 0 0 0-.84.66 6.9 6.9 0 0 1-.211.441c-.169.325-.142.716.064 1.018l.727 1.064c.32.448.27 1.06-.12 1.45l-1.833 1.833a1.125 1.125 0 0 1-1.45.12l-1.064-.727a1.125 1.125 0 0 0-1.018-.064 6.9 6.9 0 0 1-.441.211 1.125 1.125 0 0 0-.66.84l-.213 1.281c-.09.542-.56.94-1.11.94h-2.593c-.55 0-1.02-.398-1.11-.94l-.213-1.281a1.125 1.125 0 0 0-.66-.84 6.9 6.9 0 0 1-.441-.211 1.125 1.125 0 0 0-1.018.064l-1.064.727a1.125 1.125 0 0 1-1.45-.12L2.914 18.55a1.125 1.125 0 0 1-.12-1.45l.727-1.064c.206-.302.233-.693.064-1.018a6.9 6.9 0 0 1-.211-.441 1.125 1.125 0 0 0-.84-.66l-1.281-.213A1.125 1.125 0 0 1 .313 12.594v-2.593c0-.55.398-1.02.94-1.11l1.281-.213c.374-.063.686-.313.84-.66.066-.15.136-.297.211-.441.169-.325.142-.716-.064-1.018l-.727-1.064a1.125 1.125 0 0 1 .12-1.45L4.747 2.213a1.125 1.125 0 0 1 1.45-.12l1.064.727c.302.206.693.233 1.018.064.144-.075.291-.145.441-.211.347-.154.597-.466.66-.84Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+          </svg>
+        </a>
+
+        <div class="-mt-14 flex flex-col gap-5 md:flex-row md:items-end">
+          {% if user.avatar_url %}
+          <img class="h-28 w-28 rounded-[2rem] object-cover ring-4 ring-white shadow-sm" src="{{ user.avatar_url }}" alt="{{ user.display_name }}" loading="lazy">
+          {% else %}
+          <div class="grid h-28 w-28 place-items-center rounded-[2rem] bg-slate-950 text-4xl font-black text-white ring-4 ring-white shadow-sm">{{ user.display_name[:1] }}</div>
+          {% endif %}
+          <div class="pb-2">
+            <p class="text-sm font-black text-orange-600">@{{ user.username }}</p>
+            <h1 class="mt-1 text-4xl font-black tracking-tight md:text-5xl">{{ user.display_name }}</h1>
+            <p class="mt-3 max-w-2xl text-sm leading-relaxed text-slate-500">{{ user.bio or "这个人还没有写简介。" }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-6 grid gap-4 md:grid-cols-3">
+      <div class="rounded-[2rem] border border-slate-100 bg-white/90 p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-md">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-black text-slate-400">积分</p>
+            <p class="mt-3 text-4xl font-black text-orange-600">{{ stats.reputation }}</p>
+          </div>
+          <svg class="h-7 w-7 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 12A8.25 8.25 0 1 1 3.75 12a8.25 8.25 0 0 1 16.5 0Z" />
+          </svg>
+        </div>
+        <p class="mt-4 text-xs font-bold text-slate-400">已解锁 PRO 基础权限</p>
+      </div>
+      <div class="rounded-[2rem] border border-slate-100 bg-white/90 p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-md">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-black text-slate-400">获赞</p>
+            <p class="mt-3 text-4xl font-black text-slate-950">{{ stats.liked_total }}</p>
+          </div>
+          <svg class="h-7 w-7 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733C11.285 4.876 9.623 3.75 7.688 3.75 5.098 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+          </svg>
+        </div>
+      </div>
+      <div class="rounded-[2rem] border border-slate-100 bg-white/90 p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-md">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-black text-slate-400">发布数</p>
+            <p class="mt-3 text-4xl font-black text-slate-950">{{ stats.post_total }}</p>
+          </div>
+          <svg class="h-7 w-7 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-7.5A2.25 2.25 0 0 0 17.25 4.5H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5A2.25 2.25 0 0 0 6.75 19.5h7.5" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9h7.5M8.25 12h7.5M8.25 15h4.5" />
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-6">
+      <div class="mb-4 flex gap-2 rounded-[2rem] border border-slate-100 bg-white/90 p-2 shadow-sm backdrop-blur-md">
+        <button class="rounded-2xl px-5 py-3 text-sm font-black transition" :class="tabClass('posts')" type="button" x-on:click="switchTab('posts')">我的发布</button>
+        <button class="rounded-2xl px-5 py-3 text-sm font-black transition" :class="tabClass('bookmarks')" type="button" x-on:click="switchTab('bookmarks')">我的收藏</button>
+      </div>
+      <div x-show="tab === 'posts'">
+        {{ post_grid(posts, "发布第一篇内容后，它会出现在这里。") }}
+      </div>
+      <div x-show="tab === 'bookmarks'" x-cloak>
+        {{ post_grid(bookmarks, "收藏值得反复看的内容，它们会集中在这里。") }}
+      </div>
+    </section>
+  </div>
+
+  <aside class="space-y-4 lg:sticky lg:top-24 lg:self-start">
+    <section class="rounded-[2rem] border border-slate-100 bg-white/90 p-5 shadow-sm backdrop-blur-md">
+      <p class="text-sm font-black text-slate-400">每日动作</p>
+      <h2 class="mt-2 text-xl font-black">签到领积分</h2>
+      <p class="mt-2 text-sm leading-relaxed text-slate-500">连续签到会积累更稳定的使用额度。</p>
+      <a class="mt-5 flex w-full items-center justify-center rounded-2xl bg-orange-600 px-5 py-3 text-sm font-black text-white transition hover:bg-orange-700" href="/account">签到领积分</a>
+    </section>
+
+    <section class="rounded-[2rem] border border-slate-100 bg-white/90 p-5 shadow-sm backdrop-blur-md">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-black">最近订单</h2>
+        <a class="text-xs font-black text-orange-600" href="/account">查看</a>
+      </div>
+      <div class="mt-4 rounded-2xl bg-slate-50 px-4 py-4">
+        <p class="text-sm font-bold text-slate-500">暂无最近订单</p>
+        <p class="mt-1 text-xs leading-relaxed text-slate-400">充值和会员订单会在会员中心统一管理。</p>
+      </div>
+    </section>
+
+    <section class="rounded-[2rem] border border-slate-100 bg-white/90 p-5 shadow-sm backdrop-blur-md">
+      <h2 class="text-lg font-black">快捷入口</h2>
+      <div class="mt-4 grid gap-2">
+        <a class="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-slate-600 transition hover:bg-orange-50 hover:text-orange-600" href="/">回到首页</a>
+        <a class="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-slate-600 transition hover:bg-orange-50 hover:text-orange-600" href="https://tools.meetseek.ai">AI 工具箱</a>
+        <a class="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-slate-600 transition hover:bg-orange-50 hover:text-orange-600" href="https://prompts.meetseek.ai">提示词库</a>
+      </div>
+    </section>
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ request.state.csp_nonce }}">
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("userProfile", () => ({
+      tab: "posts",
+      switchTab(nextTab) {
+        this.tab = nextTab;
+      },
+      tabClass(target) {
+        return this.tab === target
+          ? "bg-slate-950 text-white shadow-sm"
+          : "text-slate-500 hover:bg-slate-100";
+      },
+    }));
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ meta.title }}</title>
+  <meta name="description" content="{{ meta.description }}">
+  <link rel="canonical" href="{{ meta.canonical_url }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { letter-spacing: 0; }
+    .glass { background: rgba(255, 255, 255, .72); backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, .62); }
+    .field { width: 100%; border-radius: 1rem; border: 1px solid rgb(226 232 240); background: rgb(248 250 252 / .82); padding: .85rem 1rem; font-size: .875rem; font-weight: 700; outline: none; transition: .18s ease; }
+    .field:focus { border-color: rgb(251 146 60); background: white; box-shadow: 0 0 0 4px rgb(255 237 213 / .72); }
+    .quick-chip { border-radius: 9999px; background: rgb(241 245 249); color: rgb(71 85 105); cursor: pointer; display: inline-flex; padding: .25rem .5rem; font-size: .75rem; line-height: 1rem; user-select: none; transition: background-color .18s ease, color .18s ease; }
+    .quick-chip:hover { background: rgb(226 232 240); color: rgb(30 41 59); }
+  </style>
+</head>
+<body class="min-h-screen bg-[radial-gradient(circle_at_top_left,#fff7ed_0,#f8fafc_36%,#eef2ff_100%)] text-slate-950">
+  <div class="mx-auto flex min-h-screen max-w-7xl gap-6 px-4 py-6">
+    <aside class="hidden w-64 shrink-0 md:block">
+      <div class="sticky top-4 flex h-[calc(100vh-2rem)] flex-col rounded-2xl border border-white/40 bg-white/60 p-4 shadow-sm backdrop-blur-md">
+        <a href="https://meetseek.ai/" class="flex items-center gap-3 rounded-2xl bg-white/55 p-3 transition hover:bg-white/80 hover:opacity-90">
+          <span class="grid h-11 w-11 place-items-center rounded-xl bg-orange-600 text-lg font-black text-white">M</span>
+          <span>
+            <span class="block text-xl font-black">meetseek</span>
+            <span class="block text-xs font-bold text-slate-400">AI 工具箱</span>
+          </span>
+        </a>
+        <nav class="mt-6 grid gap-1 text-sm font-black text-slate-600">
+          <button type="button" data-search-trigger onclick="openSearch()" class="mb-3 flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-100"><span>🔍 搜索内容与工具...</span><kbd class="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-400">⌘ K</kbd></button>
+          <a class="rounded-lg bg-slate-100/70 px-4 py-3 text-slate-900 transition-colors hover:bg-slate-200/70" href="https://meetseek.ai/">🏠 返回主站大本营</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="{{ prompts_base_url }}/">✨ 提示词库</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="{{ tools_base_url }}/">🧰 AI 工具箱</a>
+          <a class="rounded-lg bg-orange-50 px-4 py-3 text-orange-600 transition-colors hover:bg-orange-100" href="/tools/identity-builder">🧬 JSON 身份锁</a>
+          <a class="rounded-lg px-4 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="/account">👤 会员中心</a>
+        </nav>
+        <div class="mt-auto rounded-2xl border border-white/50 bg-white/55 p-4">
+          <p class="text-xs font-black uppercase tracking-wide text-slate-400">输出格式</p>
+          <p class="mt-2 text-sm font-bold leading-6 text-slate-500">生成结构化 JSON，可直接复制给 AI 绘画模型或工作流。</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="min-w-0 flex-1">
+      <a href="https://meetseek.ai/" class="mb-4 inline-flex items-center gap-1 text-sm font-bold text-slate-400 transition-colors hover:text-slate-700">← 返回主站大本营</a>
+      <section class="mb-6 rounded-[2rem] border border-white/60 bg-white/50 p-6 shadow-sm backdrop-blur-md">
+        <span class="rounded-full bg-orange-100 px-3 py-1 text-xs font-black text-orange-700">Identity Builder</span>
+        <h1 class="mt-4 text-4xl font-black leading-tight md:text-5xl">JSON 身份锁组装台</h1>
+        <p class="mt-4 max-w-3xl text-sm font-bold leading-7 text-slate-500">左侧填写人物身份、情绪动作、镜头光影；右侧实时生成稳定角色一致性的结构化 JSON 提示词。</p>
+      </section>
+
+      <section class="grid gap-6 lg:grid-cols-[minmax(320px,40%)_minmax(0,60%)]">
+        <form id="identity-form" class="glass rounded-[2rem] p-5 shadow-sm md:p-6">
+          <div class="space-y-6">
+            <fieldset class="rounded-3xl bg-white/70 p-5 ring-1 ring-slate-100">
+              <legend class="px-1 text-sm font-black text-orange-600">模块 A：身份锁 Identity</legend>
+              <label class="mt-4 block text-sm font-black text-slate-700">姓名 / 角色</label>
+              <input id="identity-role" class="field mt-2" value="年轻女性主角" placeholder="例如：年轻女性主角、品牌代言人、赛博医生">
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button class="quick-chip" type="button" data-fill-target="identity-role" data-fill-mode="replace">赛博朋克女黑客</button>
+                <button class="quick-chip" type="button" data-fill-target="identity-role" data-fill-mode="replace">高冷职场精英</button>
+                <button class="quick-chip" type="button" data-fill-target="identity-role" data-fill-mode="replace">沧桑的私家侦探</button>
+                <button class="quick-chip" type="button" data-fill-target="identity-role" data-fill-mode="replace">日系清透感少女</button>
+              </div>
+              <label class="mt-4 block text-sm font-black text-slate-700">核心骨相 / 外貌特征</label>
+              <textarea id="identity-features" class="field mt-2 min-h-28 resize-y" placeholder="例如：鹅蛋脸，清晰下颌线，干净肤质，黑色长发，稳定五官比例"></textarea>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button class="quick-chip" type="button" data-fill-target="identity-features" data-fill-mode="append">清晰下颌线+高颧骨</button>
+                <button class="quick-chip" type="button" data-fill-target="identity-features" data-fill-mode="append">深邃眼窝+混血立体感</button>
+                <button class="quick-chip" type="button" data-fill-target="identity-features" data-fill-mode="append">野生断眉+冷白皮</button>
+              </div>
+            </fieldset>
+
+            <fieldset class="rounded-3xl bg-white/70 p-5 ring-1 ring-slate-100">
+              <legend class="px-1 text-sm font-black text-orange-600">模块 B：行为与情绪 Skill & Emotion</legend>
+              <label class="mt-4 block text-sm font-black text-slate-700">面部微表情</label>
+              <input id="identity-expression" class="field mt-2" value="自然放松，轻微自信微笑" placeholder="例如：冷静凝视、轻微惊讶、温柔微笑">
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button class="quick-chip" type="button" data-fill-target="identity-expression" data-fill-mode="replace">漫不经心的冷酷凝视</button>
+                <button class="quick-chip" type="button" data-fill-target="identity-expression" data-fill-mode="replace">眉头微皱咬嘴唇</button>
+                <button class="quick-chip" type="button" data-fill-target="identity-expression" data-fill-mode="replace">极其放松的开怀大笑</button>
+              </div>
+              <label class="mt-4 block text-sm font-black text-slate-700">肢体动作</label>
+              <input id="identity-pose" class="field mt-2" value="身体微微侧向镜头，姿态稳定自然" placeholder="例如：回头看镜头、手扶栏杆、走路瞬间">
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button class="quick-chip" type="button" data-fill-target="identity-pose" data-fill-mode="replace">双手交叉抱胸直视镜头</button>
+                <button class="quick-chip" type="button" data-fill-target="identity-pose" data-fill-mode="replace">单手整理领带</button>
+                <button class="quick-chip" type="button" data-fill-target="identity-pose" data-fill-mode="replace">身体后倾靠在椅背上</button>
+              </div>
+            </fieldset>
+
+            <fieldset class="rounded-3xl bg-white/70 p-5 ring-1 ring-slate-100">
+              <legend class="px-1 text-sm font-black text-orange-600">模块 C：镜头与光影 Lens & Lighting</legend>
+              <div class="grid gap-4 sm:grid-cols-2">
+                <label class="block text-sm font-black text-slate-700">景别焦段
+                  <select id="identity-lens" class="field mt-2">
+                    <option value="close-up portrait, 85mm lens">特写 85mm</option>
+                    <option value="half body portrait, 50mm lens" selected>半身 50mm</option>
+                    <option value="wide full body shot, 24mm lens">全景 24mm</option>
+                  </select>
+                </label>
+                <label class="block text-sm font-black text-slate-700">光影预设
+                  <select id="identity-lighting" class="field mt-2">
+                    <option value="soft natural daylight" selected>自然光</option>
+                    <option value="cyberpunk neon lighting">赛博朋克霓虹</option>
+                    <option value="Rembrandt side lighting">伦勃朗侧光</option>
+                  </select>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="rounded-3xl bg-white/70 p-5 ring-1 ring-slate-100">
+              <legend class="px-1 text-sm font-black text-orange-600">模块 D：高级设置 Advanced</legend>
+              <label class="mt-4 flex cursor-pointer items-center justify-between gap-4 rounded-2xl bg-slate-50 p-4">
+                <span>
+                  <span class="block text-sm font-black text-slate-800">自动净化油腻塑料质感</span>
+                  <span class="mt-1 block text-xs font-bold text-slate-400">Anti-Plastic Filter，默认开启</span>
+                </span>
+                <input id="identity-anti-plastic" type="checkbox" checked class="h-5 w-5 accent-orange-600">
+              </label>
+            </fieldset>
+          </div>
+        </form>
+
+        <section class="overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/20">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+            <div>
+              <p class="text-xs font-black uppercase tracking-wide text-emerald-300">JSON Monitor</p>
+              <h2 class="mt-1 text-xl font-black text-white">实时结构化提示词</h2>
+            </div>
+            <button id="copy-json" class="rounded-full bg-emerald-500 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-emerald-400" type="button">一键复制</button>
+          </div>
+          <pre class="max-h-[74vh] min-h-[620px] overflow-auto p-5 text-[13px] leading-7 text-emerald-100"><code id="json-output"></code></pre>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const fields = Array.from(document.querySelectorAll("#identity-form input, #identity-form textarea, #identity-form select"));
+      const output = document.getElementById("json-output");
+      const copyButton = document.getElementById("copy-json");
+      const antiPlastic = document.getElementById("identity-anti-plastic");
+
+      function value(id) {
+        return document.getElementById(id).value.trim();
+      }
+
+      function buildIdentityJson() {
+        const negative = [
+          "watermark",
+          "logo",
+          "text overlay",
+          "wrong identity",
+          "deformed hands",
+          "distorted face"
+        ];
+        if (antiPlastic.checked) {
+          negative.push("overly glossy", "plastic skin", "collagen-rich", "fake anatomy");
+        }
+        return {
+          comprehensive_portrait_analysis: {
+            purpose: "consistent identity image generation",
+            identity_lock: {
+              name_or_role: value("identity-role"),
+              core_facial_structure: value("identity-features"),
+              preserve_identity_priority: "high",
+              do_not_change: ["age impression", "ethnicity cues", "facial proportions", "bone structure"]
+            },
+            subject_details: {
+              facial_micro_expression: value("identity-expression"),
+              body_action: value("identity-pose"),
+              styling_rule: "natural, believable, non-overprocessed"
+            },
+            lens_and_lighting: {
+              framing_and_focal_length: value("identity-lens"),
+              lighting_preset: value("identity-lighting"),
+              camera_behavior: "stable composition, realistic depth, clean background separation"
+            }
+          },
+          generation_prompt: {
+            positive_prompt: [
+              value("identity-role"),
+              value("identity-features"),
+              value("identity-expression"),
+              value("identity-pose"),
+              value("identity-lens"),
+              value("identity-lighting"),
+              "photorealistic texture",
+              "consistent character identity",
+              "high detail",
+              "natural skin"
+            ].filter(Boolean).join(", "),
+            negative_prompt: negative.join(", ")
+          },
+          workflow_notes: {
+            use_case: "AI portrait generation / image-to-image / character consistency",
+            recommended_strength: "medium identity lock, low facial drift",
+            output_language: "JSON"
+          }
+        };
+      }
+
+      function render() {
+        output.textContent = JSON.stringify(buildIdentityJson(), null, 2);
+      }
+
+      fields.forEach((field) => {
+        field.addEventListener("input", render);
+        field.addEventListener("change", render);
+      });
+
+      document.querySelectorAll(".quick-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const target = document.getElementById(chip.dataset.fillTarget || "");
+          if (!target) return;
+          const text = chip.textContent.trim();
+          if (chip.dataset.fillMode === "append") {
+            target.value = target.value.trim() ? `${target.value.trim()}，${text}` : text;
+          } else {
+            target.value = text;
+          }
+          target.dispatchEvent(new Event("input", { bubbles: true }));
+          target.dispatchEvent(new Event("change", { bubbles: true }));
+          target.focus();
+        });
+      });
+
+      copyButton.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(output.textContent);
+        copyButton.textContent = "✅ 已复制";
+        copyButton.classList.add("bg-emerald-400");
+        setTimeout(() => {
+          copyButton.textContent = "一键复制";
+          copyButton.classList.remove("bg-emerald-400");
+        }, 1500);
+      });
+
+      render();
+    })();
+  </script>
+  {% include "_spotlight_search.html" %}
+</body>
+</html>

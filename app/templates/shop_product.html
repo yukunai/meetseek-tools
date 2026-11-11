@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="space-y-6">
+  <a href="{{ shop_base_url }}/" class="inline-flex items-center gap-1 text-sm font-bold text-slate-400 transition-colors hover:text-slate-700">← 返回商城</a>
+
+  <article class="overflow-hidden rounded-3xl border border-white/60 bg-white/80 shadow-sm backdrop-blur-md">
+    <div class="grid gap-0 lg:grid-cols-[1.05fr_.95fr]">
+      <section class="bg-slate-50 p-4 md:p-6">
+        {% if product.cover_image %}
+        <img src="{{ product.cover_image }}" alt="{{ product.title }}" loading="lazy" class="h-[360px] w-full rounded-3xl object-cover md:h-[520px]">
+        {% else %}
+        <div class="grid h-[360px] place-items-center rounded-3xl bg-gradient-to-br from-slate-50 via-orange-50 to-emerald-50 md:h-[520px]">
+          <span class="grid h-20 w-20 place-items-center rounded-3xl bg-slate-950 text-2xl font-black text-white">M</span>
+        </div>
+        {% endif %}
+        {% if product.gallery_images and product.gallery_images|length > 1 %}
+        <div class="mt-4 grid grid-cols-5 gap-3">
+          {% for image in product.gallery_images[:10] %}
+          <img src="{{ image }}" alt="{{ product.title }} 商品图 {{ loop.index }}" loading="lazy" class="h-20 w-full rounded-2xl border border-white object-cover shadow-sm">
+          {% endfor %}
+        </div>
+        {% endif %}
+      </section>
+
+      <section class="flex flex-col p-6 md:p-10">
+        <div class="flex items-start justify-between gap-5">
+          <div>
+            <h1 class="text-4xl font-black tracking-tight text-slate-950 md:text-5xl">{{ product.title }}</h1>
+            {% if product.subtitle %}
+            <p class="mt-4 text-base font-bold leading-7 text-slate-500">{{ product.subtitle }}</p>
+            {% endif %}
+          </div>
+          <span class="shrink-0 rounded-full bg-slate-100 px-4 py-2 text-xs font-black text-slate-500">{{ product.stock_label }}</span>
+        </div>
+
+        <div class="mt-8 rounded-3xl bg-slate-50 p-5">
+          {% if product.price_cents > 0 %}
+          <p class="text-sm font-black text-slate-400">价格</p>
+          <p class="mt-2 text-5xl font-black text-slate-950">¥{{ product.price_yuan }}</p>
+          {% else %}
+          <p class="text-5xl font-black text-slate-950">免费</p>
+          {% endif %}
+        </div>
+
+        {% if product.description %}
+        <div class="prose prose-slate mt-8 max-w-none text-slate-600">
+          <h2>商品说明</h2>
+          <p>{{ product.description }}</p>
+        </div>
+        {% endif %}
+
+        {% if product.fulfillment_note %}
+        <div class="mt-6 rounded-3xl border border-orange-100 bg-orange-50/70 p-5 text-sm font-bold leading-6 text-orange-700">
+          {{ product.fulfillment_note }}
+        </div>
+        {% endif %}
+
+        <div class="mt-auto pt-8">
+          {% if current_user %}
+          <form data-shop-order class="flex flex-wrap items-center gap-3 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            <input type="hidden" name="payment_method" value="manual">
+            <label class="text-sm font-black text-slate-500" for="quantity-{{ product.id }}">数量</label>
+            <input id="quantity-{{ product.id }}" class="h-12 w-20 rounded-2xl border border-slate-200 bg-white px-3 text-center text-sm font-black outline-none focus:ring-2 focus:ring-slate-900" name="quantity" type="number" min="1" max="99" value="1">
+            <button class="h-12 rounded-2xl bg-slate-950 px-8 text-sm font-black text-white transition hover:bg-orange-600" type="submit">下单并支付</button>
+            <p class="shop-order-message min-h-5 text-sm font-bold"></p>
+          </form>
+          {% else %}
+          <a href="{{ main_base_url }}/login" class="inline-flex h-12 items-center rounded-2xl bg-slate-950 px-8 text-sm font-black text-white transition hover:bg-orange-600">登录后下单</a>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </article>
+</section>
+
+<script>
+  document.addEventListener("submit", async function (event) {
+    const form = event.target.closest("form[data-shop-order]");
+    if (!form) return;
+    event.preventDefault();
+    const message = form.querySelector(".shop-order-message");
+    const button = form.querySelector("button[type='submit']");
+    const oldText = button ? button.textContent : "";
+    if (button) {
+      button.disabled = true;
+      button.textContent = "处理中...";
+    }
+    if (message) {
+      message.textContent = "";
+      message.className = "shop-order-message min-h-5 text-sm font-bold";
+    }
+    try {
+      const response = await fetch("/api/shop/orders", {
+        method: "POST",
+        body: new FormData(form),
+        credentials: "same-origin"
+      });
+      if (response.status === 401) {
+        window.location.href = "{{ main_base_url }}/login";
+        return;
+      }
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.detail || "下单失败");
+      window.location.href = payload.payment_url || "{{ shop_base_url }}/";
+    } catch (error) {
+      if (message) {
+        message.textContent = error.message || "下单失败";
+        message.classList.add("text-red-600");
+      }
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  });
+</script>
+{% endblock %}

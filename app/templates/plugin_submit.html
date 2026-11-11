@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="{{ lang }}" dir="{{ dir }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ meta.title }}</title>
+  <meta name="description" content="{{ meta.description }}">
+  <link rel="canonical" href="{{ meta.canonical_url }}">
+  <link rel="stylesheet" href="/static/plugin-market.css">
+  <link rel="stylesheet" href="/static/plugin-submit.css?v=20260526-submit">
+</head>
+<body class="ps-body">
+  <main class="ps-shell">
+    <header class="ps-header">
+      <a href="/" class="ps-brand">
+        <span class="pm-logo">M</span>
+        <span>MeetSeek</span>
+      </a>
+      <nav>
+        <a href="/plugins">全部插件</a>
+        <a href="{{ tools_base_url }}">AI 工具箱</a>
+        <a href="{{ prompts_base_url }}">提示词库</a>
+      </nav>
+    </header>
+
+    <section class="ps-hero">
+      <p class="ps-eyebrow">Creator Center</p>
+      <h1>提交你的插件或 AI 工具</h1>
+      <p>填写面向用户的发布信息。评分、用户数、精选、趋势榜和排序只在平台后台审核后维护。</p>
+    </section>
+
+    <form id="plugin-submit-form" class="ps-grid">
+      <section class="ps-card ps-main-card">
+        <div class="ps-section-head">
+          <span>01</span>
+          <div>
+            <h2>基础信息</h2>
+            <p>这些内容会直接展示在首页卡片和插件详情页。</p>
+          </div>
+        </div>
+
+        <label class="ps-field">
+          <span>插件名称</span>
+          <input name="title" required maxlength="120" placeholder="例如：MeetSeek 提示词助手">
+        </label>
+
+        <label class="ps-field">
+          <span>一句话推荐</span>
+          <input name="short_description" required maxlength="80" placeholder="20-30 字，写给首页卡片看的短卖点">
+        </label>
+
+        <label class="ps-field">
+          <span>详细功能说明</span>
+          <textarea name="long_description" required rows="9" placeholder="支持 Markdown。说明插件解决什么问题、核心功能、适合谁使用。"></textarea>
+        </label>
+
+        <div class="ps-upload-row">
+          <label class="ps-upload ps-icon-upload">
+            <input type="file" name="icon" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+            <span class="ps-upload-title">上传图标</span>
+            <span class="ps-upload-sub">PNG / SVG，留空则取名称首字母</span>
+            <img data-preview="icon" alt="" hidden>
+          </label>
+
+          <label class="ps-upload">
+            <input type="file" name="cover_image" accept="image/png,image/jpeg,image/webp">
+            <span class="ps-upload-title">封面图</span>
+            <span class="ps-upload-sub">建议 800x600，不超过 5MB</span>
+            <img data-preview="cover" alt="" hidden>
+          </label>
+        </div>
+
+        <label class="ps-gallery">
+          <input id="plugin-gallery-input" type="file" accept="image/png,image/jpeg,image/webp" multiple>
+          <span class="ps-upload-title">展示图集</span>
+          <span class="ps-upload-sub">可上传多张截图，发布后用于详情页展示。</span>
+          <div id="plugin-gallery-preview" class="ps-gallery-preview"></div>
+        </label>
+      </section>
+
+      <aside class="ps-card ps-side-card">
+        <div class="ps-section-head">
+          <span>02</span>
+          <div>
+            <h2>上架设置</h2>
+            <p>提交后默认进入待审核。</p>
+          </div>
+        </div>
+
+        <label class="ps-field">
+          <span>分类</span>
+          <select name="category">
+            {% for category in category_values %}
+              <option value="{{ category }}">{{ category }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label class="ps-field">
+          <span>新增分类（可选）</span>
+          <input name="category_other" placeholder="没有合适分类时填写">
+        </label>
+
+        <label class="ps-field">
+          <span>版本号</span>
+          <input name="version" placeholder="1.0.0" value="1.0.0">
+        </label>
+
+        <div class="ps-field">
+          <span>卡片色彩</span>
+          <input id="plugin-accent" type="hidden" name="accent" value="{{ accent_presets[0] }}">
+          <div class="ps-accent-grid">
+            {% for preset in accent_presets %}
+              <button type="button" class="ps-accent{% if loop.first %} active{% endif %} bg-gradient-to-br {{ preset }}" data-accent="{{ preset }}" aria-label="选择色彩"></button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <label class="ps-field">
+          <span>Chrome Web Store 链接</span>
+          <input name="chrome_store_url" placeholder="https://chromewebstore.google.com/...">
+        </label>
+
+        <label class="ps-field">
+          <span>Edge 扩展商店链接</span>
+          <input name="edge_store_url" placeholder="https://microsoftedge.microsoft.com/...">
+        </label>
+
+        <label class="ps-field">
+          <span>直接访问网址</span>
+          <input name="direct_url" placeholder="https://example.com">
+        </label>
+
+        <label class="ps-field">
+          <span>支持链接</span>
+          <input name="support_url" placeholder="文档、反馈或客服链接">
+        </label>
+
+        <label class="ps-field">
+          <span>标签</span>
+          <input name="tags" placeholder="AI, Productivity, Prompt">
+        </label>
+
+        <label class="ps-field">
+          <span>开发者名称</span>
+          <input name="developer_name" placeholder="团队或个人名称">
+        </label>
+
+        <label class="ps-field">
+          <span>联系邮箱</span>
+          <input name="developer_email" type="email" placeholder="用于审核沟通，不公开">
+        </label>
+
+        <button class="ps-submit" type="submit">提交审核</button>
+        <p id="plugin-submit-status" class="ps-status" role="status"></p>
+      </aside>
+    </form>
+  </main>
+
+  <script>
+    (() => {
+      const form = document.getElementById('plugin-submit-form');
+      const status = document.getElementById('plugin-submit-status');
+      const galleryInput = document.getElementById('plugin-gallery-input');
+      const galleryPreview = document.getElementById('plugin-gallery-preview');
+      let galleryFiles = [];
+
+      function previewSingle(input, key) {
+        const img = document.querySelector(`[data-preview="${key}"]`);
+        const file = input.files && input.files[0];
+        if (!img || !file) return;
+        img.src = URL.createObjectURL(file);
+        img.hidden = false;
+      }
+
+      function renderGallery() {
+        galleryPreview.innerHTML = '';
+        galleryFiles.forEach((file, index) => {
+          const item = document.createElement('div');
+          item.className = 'ps-gallery-item';
+          item.innerHTML = `<img src="${URL.createObjectURL(file)}" alt=""><button type="button" aria-label="移除">×</button>`;
+          item.querySelector('button').addEventListener('click', () => {
+            galleryFiles.splice(index, 1);
+            renderGallery();
+          });
+          galleryPreview.appendChild(item);
+        });
+      }
+
+      form.querySelector('input[name="icon"]').addEventListener('change', (event) => previewSingle(event.target, 'icon'));
+      form.querySelector('input[name="cover_image"]').addEventListener('change', (event) => previewSingle(event.target, 'cover'));
+      galleryInput.addEventListener('change', () => {
+        galleryFiles = Array.from(galleryInput.files || []).slice(0, 8);
+        renderGallery();
+      });
+
+      document.querySelectorAll('.ps-accent').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.ps-accent').forEach((node) => node.classList.remove('active'));
+          button.classList.add('active');
+          document.getElementById('plugin-accent').value = button.dataset.accent || '';
+        });
+      });
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        status.textContent = '正在提交...';
+        status.className = 'ps-status';
+        const body = new FormData(form);
+        body.delete('gallery_images');
+        galleryFiles.forEach((file) => body.append('gallery_images', file));
+        try {
+          const response = await fetch('/api/plugins/submit', { method: 'POST', body });
+          const data = await response.json().catch(() => ({}));
+          if (response.status === 401) {
+            window.location.href = '/login';
+            return;
+          }
+          if (!response.ok) throw new Error(data.detail || '提交失败');
+          status.textContent = data.message || '已提交审核';
+          status.classList.add('success');
+          form.reset();
+          galleryFiles = [];
+          renderGallery();
+          document.querySelectorAll('[data-preview]').forEach((img) => { img.hidden = true; img.removeAttribute('src'); });
+        } catch (error) {
+          status.textContent = error.message || '提交失败，请稍后再试';
+          status.classList.add('error');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

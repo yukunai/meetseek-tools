@@ -1,0 +1,374 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.ps-body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(255, 116, 42, .12), transparent 28rem),
+    radial-gradient(circle at top right, rgba(96, 165, 250, .14), transparent 28rem),
+    #f8fafc;
+  color: #0f172a;
+}
+
+.ps-shell {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 28px 0 72px;
+}
+
+.ps-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.ps-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #0f172a;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.ps-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ps-header nav a {
+  border: 1px solid rgba(15, 23, 42, .06);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  color: #475569;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px 14px;
+  text-decoration: none;
+  transition: .2s ease;
+}
+
+.ps-header nav a:hover {
+  background: #fff;
+  color: #0f172a;
+}
+
+.ps-hero {
+  margin: 54px 0 28px;
+}
+
+.ps-eyebrow {
+  margin: 0 0 10px;
+  color: #f4510b;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.ps-hero h1 {
+  max-width: 780px;
+  margin: 0;
+  font-size: clamp(38px, 5vw, 68px);
+  line-height: .96;
+  letter-spacing: -.06em;
+}
+
+.ps-hero p {
+  max-width: 660px;
+  margin: 18px 0 0;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+.ps-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+.ps-card {
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, .05);
+  backdrop-filter: blur(18px);
+}
+
+.ps-main-card,
+.ps-side-card {
+  padding: 28px;
+}
+
+.ps-side-card {
+  position: sticky;
+  top: 22px;
+}
+
+.ps-section-head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.ps-section-head > span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 14px;
+  background: #0b1020;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.ps-section-head h2 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -.03em;
+}
+
+.ps-section-head p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.ps-field {
+  display: grid;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.ps-field > span {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.ps-field input,
+.ps-field textarea,
+.ps-field select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dbe3ee;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, .75);
+  color: #0f172a;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+  padding: 13px 14px;
+  transition: .18s ease;
+}
+
+.ps-field textarea {
+  resize: vertical;
+  line-height: 1.75;
+}
+
+.ps-field input:focus,
+.ps-field textarea:focus,
+.ps-field select:focus {
+  border-color: rgba(15, 23, 42, .72);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, .06);
+}
+
+.ps-upload-row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.ps-upload,
+.ps-gallery {
+  position: relative;
+  display: grid;
+  min-height: 168px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px dashed #cbd5e1;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(255, 247, 237, .7), rgba(248, 250, 252, .92));
+  color: #64748b;
+  cursor: pointer;
+  text-align: center;
+  transition: .2s ease;
+}
+
+.ps-icon-upload {
+  min-height: 168px;
+}
+
+.ps-upload:hover,
+.ps-gallery:hover {
+  border-color: #f4510b;
+  background: #fff;
+}
+
+.ps-upload input,
+.ps-gallery input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ps-upload-title {
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.ps-upload-sub {
+  display: block;
+  margin-top: 6px;
+  padding: 0 18px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.ps-upload img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ps-icon-upload img {
+  inset: 50%;
+  width: 86px;
+  height: 86px;
+  border-radius: 24px;
+  transform: translate(-50%, -50%);
+}
+
+.ps-gallery {
+  min-height: 150px;
+  margin-top: 18px;
+  padding: 18px;
+}
+
+.ps-gallery-preview {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
+  pointer-events: auto;
+}
+
+.ps-gallery-item {
+  position: relative;
+  width: 92px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.ps-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ps-gallery-item button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, .72);
+  color: #fff;
+  cursor: pointer;
+}
+
+.ps-accent-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ps-accent {
+  height: 38px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.ps-accent.active {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, .08);
+}
+
+.ps-submit {
+  width: 100%;
+  margin-top: 24px;
+  border: 0;
+  border-radius: 18px;
+  background: #f4510b;
+  color: #fff;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 950;
+  padding: 15px 18px;
+  box-shadow: 0 18px 36px rgba(244, 81, 11, .22);
+  transition: .2s ease;
+}
+
+.ps-submit:hover {
+  transform: translateY(-1px);
+  background: #e84705;
+}
+
+.ps-status {
+  min-height: 22px;
+  margin: 14px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.ps-status.success {
+  color: #059669;
+}
+
+.ps-status.error {
+  color: #dc2626;
+}
+
+@media (max-width: 920px) {
+  .ps-grid,
+  .ps-upload-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ps-side-card {
+    position: static;
+  }
+}

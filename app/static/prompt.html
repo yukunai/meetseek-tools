@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>meetseek 提示词库 - AI 绘图 Prompt 灵感库</title>
+  <meta name="description" content="meetseek 提示词库收集可直接复用的 AI 绘图 Prompt，支持中文和英文提示词、模型标签筛选、图片反推提示词和一键复制。">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://prompts.meetseek.ai/">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="meetseek 提示词库">
+  <meta property="og:title" content="meetseek 提示词库 - AI 绘图 Prompt 灵感库">
+  <meta property="og:description" content="浏览不同风格的 AI 绘图提示词，复制中文或英文 Prompt，并按模型标签筛选可用提示词。">
+  <meta property="og:url" content="https://prompts.meetseek.ai/">
+  <meta name="twitter:card" content="summary">
+  <!--PROMPT_SEO_JSON_LD-->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { letter-spacing: 0; }
+    .prompt-card { border-radius: 18px; }
+    .masonry { column-gap: 1.25rem; }
+    .masonry-item { break-inside: avoid; display: inline-block; margin: 0 0 1.25rem; width: 100%; }
+    .prompt-gallery-image-wrap { display: block; width: 100%; background: #f8fafc; }
+    .prompt-gallery-image { display: block; width: 100%; height: auto !important; max-height: none !important; aspect-ratio: auto !important; object-fit: contain !important; }
+    body:not(.prompt-admin) [data-prompt-admin-only] { display: none !important; }
+    .modal[hidden] { display: none; }
+    .prompt-image-empty {
+      background:
+        radial-gradient(circle at 18% 18%, rgba(255,255,255,.24), transparent 28%),
+        linear-gradient(135deg, #0f172a 0%, #6d28d9 54%, #f97316 100%);
+    }
+  </style>
+</head>
+<body class="bg-[#f6f7fb] text-slate-950">
+  <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+      <a href="https://meetseek.ai/" class="flex items-center gap-3 font-black text-xl transition hover:opacity-80">
+        <span class="grid h-9 w-9 place-items-center rounded-lg bg-orange-600 text-white">M</span>
+        <span>meetseek 提示词库</span>
+      </a>
+      <nav class="hidden items-center gap-5 text-sm font-bold text-slate-600 md:flex">
+        <a class="rounded-full bg-slate-100 px-3 py-2 text-slate-700 hover:bg-slate-200" href="https://meetseek.ai/">🏠 返回主站大本营</a>
+        <a href="#gallery">图库</a>
+        <a href="/reverse">图片反推</a>
+        <a href="#plans">会员</a>
+        <a href="https://tools.meetseek.ai">工具箱</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <span id="member-badge" class="hidden rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700"></span>
+        <button id="auth-open" class="rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white" type="button">登录 / 注册</button>
+        <button id="auth-logout" class="hidden rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700" type="button">退出</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-5 py-8">
+    <section class="grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div>
+        <span class="rounded-full bg-orange-50 px-3 py-1 text-xs font-black text-orange-700">Prompt Gallery</span>
+        <h1 class="mt-5 max-w-3xl text-4xl font-black leading-tight md:text-6xl">把好看的 AI 图片提示词，整理成可以直接复用的灵感库</h1>
+        <p class="mt-5 max-w-2xl text-base leading-7 text-slate-600">浏览不同风格的提示词卡片，复制中文或英文 Prompt。模型标签表示这些提示词可拿去对应图像模型中生成图片。</p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a href="#gallery" class="rounded-xl bg-orange-600 px-5 py-3 font-bold text-white">查看提示词</a>
+          <a href="/reverse" class="rounded-xl bg-white px-5 py-3 font-bold text-slate-800 shadow-sm">打开图片反推</a>
+        </div>
+      </div>
+      <div class="prompt-card border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="aspect-[4/5] rounded-2xl bg-gradient-to-br from-slate-950 via-violet-700 to-orange-500 p-5 text-white">
+          <div class="flex h-full flex-col justify-between rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur">
+            <div>
+              <p class="text-sm font-bold opacity-80">精选提示词</p>
+              <h2 class="mt-4 text-3xl font-black">未来城市雨夜</h2>
+            </div>
+            <p class="text-sm leading-6 opacity-90">cinematic cyberpunk city street, neon rain, reflective road, ultra detailed, dramatic lighting...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="gallery" class="py-8">
+      <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-black">提示词图库</h2>
+          <p class="mt-1 text-sm text-slate-600">点击卡片查看详情，支持一键复制。</p>
+        </div>
+        <div class="flex w-full flex-wrap gap-3 md:w-auto">
+          <button id="ad-new" data-prompt-admin-only class="h-11 rounded-xl bg-orange-600 px-5 text-sm font-black text-white shadow-sm" type="button">插入广告</button>
+          <button id="prompt-new" data-prompt-admin-only class="h-11 rounded-xl bg-slate-950 px-5 text-sm font-black text-white shadow-sm" type="button">发布新提示词</button>
+          <input id="prompt-search" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-orange-500 md:w-80" placeholder="搜索风格、主题、关键词">
+        </div>
+      </div>
+      <div class="mb-5 rounded-2xl border border-slate-200 bg-white p-3">
+        <div class="mb-2 text-xs font-black uppercase text-slate-400">主题风格</div>
+        <div id="prompt-categories" class="flex flex-wrap gap-2"></div>
+      </div>
+      <div class="mb-5 rounded-2xl border border-slate-200 bg-white p-3">
+        <div class="mb-2 text-xs font-black uppercase text-slate-400">适用模型</div>
+        <div id="prompt-model-filters" class="flex flex-wrap gap-2"></div>
+      </div>
+      <div id="prompt-gallery" class="masonry columns-1 md:columns-2 xl:columns-3"></div>
+      <!--PROMPT_SEO_FALLBACK-->
+    </section>
+
+    <section id="plans" class="py-8">
+      <div class="mb-5">
+        <h2 class="text-2xl font-black">会员制</h2>
+        <p class="mt-1 text-sm text-slate-600">当前先上线账号和等级体系，后续可接支付、额度和私有图库。</p>
+      </div>
+      <div class="grid gap-5 md:grid-cols-3">
+        <div class="prompt-card border border-slate-200 bg-white p-6"><b>Free</b><p class="mt-2 text-sm text-slate-600">浏览提示词图库，复制公开 Prompt。</p></div>
+        <div class="prompt-card border border-orange-200 bg-orange-50 p-6"><b>Pro</b><p class="mt-2 text-sm text-slate-600">图片反推提示词、更多生成额度、收藏夹。</p></div>
+        <div class="prompt-card border border-slate-200 bg-white p-6"><b>VIP</b><p class="mt-2 text-sm text-slate-600">团队额度、私有提示词库和优先模型。</p></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="prompt-modal" class="modal fixed inset-0 z-40 bg-slate-950/70 p-4" hidden>
+    <div class="mx-auto grid max-h-[92vh] max-w-6xl overflow-hidden rounded-2xl bg-slate-950 text-white shadow-xl lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)]">
+      <div class="relative min-h-[320px] bg-slate-900">
+        <div id="modal-image-empty" class="prompt-image-empty grid h-full min-h-[320px] place-items-center p-8 text-center">
+          <div>
+            <p class="text-2xl font-black">上传提示词展示图</p>
+            <p class="mt-2 text-sm text-white/70">这张图就是当前 Prompt 对应的案例图。</p>
+          </div>
+        </div>
+        <img id="modal-image" class="hidden h-full max-h-[92vh] w-full object-contain" alt="提示词展示图">
+        <label data-prompt-admin-only class="absolute bottom-5 left-5 cursor-pointer rounded-xl bg-white px-4 py-3 text-sm font-black text-slate-950 shadow-lg">
+          上传图片
+          <input id="modal-image-upload" type="file" accept="image/*" class="hidden">
+        </label>
+      </div>
+      <div class="max-h-[92vh] overflow-auto p-6">
+        <div class="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <p id="modal-category" class="text-sm font-bold text-cyan-200"></p>
+            <div id="modal-taxonomy-editor" data-prompt-admin-only class="mt-2 grid gap-2 sm:grid-cols-[minmax(0,150px)_minmax(0,1fr)_minmax(0,130px)]">
+              <label class="text-xs font-black text-slate-400">
+                分类
+                <input id="modal-category-input" class="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-cyan-100 outline-none focus:border-cyan-300" placeholder="例如：赛博朋克">
+              </label>
+              <label class="text-xs font-black text-slate-400">
+                标签
+                <input id="modal-tags-input" class="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-cyan-100 outline-none focus:border-cyan-300" placeholder="例如：城市，夜景，电影感">
+              </label>
+              <label class="text-xs font-black text-slate-400">
+                排序权重
+                <input id="modal-sort-input" type="number" min="0" step="1" class="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-cyan-100 outline-none focus:border-cyan-300" placeholder="越大越靠前">
+                <span class="mt-1 block text-[11px] font-bold text-slate-500">数字越大越靠前，广告建议 100 以上。</span>
+              </label>
+            </div>
+            <h3 id="modal-title" class="mt-3 text-3xl font-black leading-tight"></h3>
+            <input id="modal-title-input" data-prompt-admin-only class="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-3xl font-black leading-tight text-white outline-none focus:border-cyan-300" placeholder="输入标题">
+            <div id="modal-model-tags" class="mt-4 flex flex-wrap gap-2"></div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="modal-favorite" class="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-slate-300 ring-1 ring-white/10 transition hover:scale-110 hover:bg-white/15 hover:text-red-400" type="button" aria-label="收藏"></button>
+            <button id="modal-close" class="rounded-full bg-white/10 px-3 py-1 font-bold text-white" type="button">×</button>
+          </div>
+        </div>
+        <label id="modal-api-toggle" data-prompt-admin-only class="mb-4 flex w-fit items-center gap-2 rounded-full bg-white/5 px-3 py-2 text-sm font-bold text-slate-200 ring-1 ring-white/10">
+          <input id="modal-use-api" type="checkbox">
+          使用后台 API 翻译
+        </label>
+        <div id="modal-model-settings" data-prompt-admin-only class="mb-4 rounded-xl bg-white/5 p-4 ring-1 ring-white/10">
+          <div class="mb-3 text-sm font-black text-slate-200">发布设置：选择适用模型</div>
+          <div id="modal-model-selector" class="flex flex-wrap gap-2"></div>
+          <button id="modal-save" data-prompt-save class="mt-4 rounded-xl bg-cyan-500 px-4 py-3 text-sm font-black text-slate-950" type="button">发布到图库</button>
+        </div>
+        <div id="modal-ad-editor" data-prompt-admin-only class="mb-4 hidden rounded-xl bg-white/5 p-4 ring-1 ring-white/10">
+          <div class="mb-3 text-sm font-black text-slate-200">广告卡片设置</div>
+          <div class="grid gap-3">
+            <label class="text-xs font-black text-slate-400">
+              跳转链接
+              <input id="modal-ad-url" class="mt-1 h-11 w-full rounded-xl border border-white/10 bg-slate-950 px-3 text-sm text-white outline-none focus:border-orange-400" placeholder="https://example.com">
+            </label>
+            <label class="text-xs font-black text-slate-400">
+              广告说明
+              <textarea id="modal-ad-description" rows="5" class="mt-1 w-full resize-y rounded-xl border border-white/10 bg-slate-950 p-3 text-sm leading-6 text-white outline-none focus:border-orange-400" placeholder="写一句会展示在卡片里的广告介绍"></textarea>
+            </label>
+            <label class="text-xs font-black text-slate-400">
+              按钮文字
+              <input id="modal-ad-cta" class="mt-1 h-11 w-full rounded-xl border border-white/10 bg-slate-950 px-3 text-sm text-white outline-none focus:border-orange-400" placeholder="查看详情">
+            </label>
+            <button data-prompt-save class="rounded-xl bg-orange-500 px-4 py-3 text-sm font-black text-white" type="button">插入广告</button>
+          </div>
+        </div>
+        <div id="modal-prompt-editor" class="rounded-xl bg-white/5 p-4 ring-1 ring-white/10">
+          <div class="border-b border-white/10 pb-3">
+            <div class="inline-flex rounded-full bg-slate-950/70 p-1 ring-1 ring-white/10" role="tablist" aria-label="Prompt language tabs">
+              <button id="modal-tab-zh" data-prompt-tab="zh" class="rounded-full px-4 py-2 text-sm font-black transition" type="button">中文</button>
+              <button id="modal-tab-en" data-prompt-tab="en" class="rounded-full px-4 py-2 text-sm font-black transition" type="button">English</button>
+            </div>
+            <div class="mt-3 mb-2 flex w-full items-center justify-between gap-3">
+              <div class="inline-flex items-center rounded-lg border border-slate-700 bg-slate-800/50 p-0.5">
+                <button id="modal-to-en" class="cursor-pointer rounded-md px-3 py-1.5 text-sm font-bold text-slate-300 transition-colors hover:bg-slate-700 hover:text-white" type="button">中 ➔ 英</button>
+                <div class="mx-1 h-4 w-px bg-slate-700"></div>
+                <button id="modal-to-zh" class="cursor-pointer rounded-md px-3 py-1.5 text-sm font-bold text-slate-300 transition-colors hover:bg-slate-700 hover:text-white" type="button">英 ➔ 中</button>
+              </div>
+              <div class="flex shrink-0 items-center">
+                <button data-copy-modal="zh" data-copy-label="复制中文" class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700" type="button">复制中文</button>
+                <button data-copy-modal="en" data-copy-label="Copy EN" class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700" type="button">Copy EN</button>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <section data-prompt-panel="zh">
+              <textarea id="modal-zh" rows="16" class="min-h-[420px] w-full resize-y rounded-xl border border-white/10 bg-slate-950 p-5 text-sm leading-8 text-white outline-none focus:border-cyan-300"></textarea>
+            </section>
+            <section data-prompt-panel="en" class="hidden">
+              <textarea id="modal-en" rows="16" class="min-h-[420px] w-full resize-y rounded-xl border border-white/10 bg-slate-950 p-5 font-mono text-sm leading-8 text-white outline-none focus:border-cyan-300"></textarea>
+            </section>
+          </div>
+        </div>
+        <div data-prompt-admin-only class="sticky bottom-0 mt-4 rounded-xl border border-cyan-400/20 bg-slate-950/95 p-4 backdrop-blur">
+          <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <button id="modal-save-bottom" data-prompt-save class="rounded-xl bg-cyan-400 px-5 py-4 text-base font-black text-slate-950 shadow-lg shadow-cyan-950/30" type="button">发布到图库</button>
+            <button id="modal-delete" class="hidden rounded-xl bg-rose-500 px-5 py-4 text-base font-black text-white shadow-lg shadow-rose-950/30" type="button">删除此卡片</button>
+          </div>
+          <p class="mt-2 text-center text-xs text-slate-400">只有后台授权的发布账号可以新增、修改、下架或删除卡片。</p>
+        </div>
+        <p id="modal-translate-status" class="mt-3 min-h-5 text-sm text-slate-400"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="auth-modal" class="modal fixed inset-0 z-50 bg-slate-950/60 p-4" hidden>
+    <div class="mx-auto mt-16 max-w-md rounded-2xl bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-2xl font-black">登录 / 注册</h3>
+        <button id="auth-close" class="rounded-full bg-slate-100 px-3 py-1 font-bold" type="button">×</button>
+      </div>
+      <form id="auth-form" class="grid gap-3">
+        <input id="auth-name" class="h-11 rounded-xl border border-slate-200 px-4" placeholder="昵称（注册时填写）">
+        <input id="auth-email" class="h-11 rounded-xl border border-slate-200 px-4" placeholder="邮箱">
+        <input id="auth-password" type="password" class="h-11 rounded-xl border border-slate-200 px-4" placeholder="密码，至少 8 位">
+        <div class="grid grid-cols-2 gap-3">
+          <button data-auth-mode="login" class="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white" type="submit">登录</button>
+          <button data-auth-mode="register" class="rounded-xl bg-orange-600 px-5 py-3 font-bold text-white" type="submit">注册</button>
+        </div>
+        <button id="forgot-open" class="justify-self-start text-sm font-bold text-orange-600" type="button">忘记密码 / 找回账号</button>
+        <p id="auth-message" class="text-sm text-slate-500"></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="forgot-modal" class="modal fixed inset-0 z-50 bg-slate-950/60 p-4" hidden>
+    <div class="mx-auto mt-28 max-w-md rounded-2xl bg-white p-6 shadow-xl">
+      <div class="mb-5 flex items-center justify-between">
+        <div>
+          <h3 class="text-2xl font-black">找回账号</h3>
+          <p class="mt-1 text-sm text-slate-500">输入注册邮箱，系统会生成一次性重置密码链接。</p>
+        </div>
+        <button id="forgot-close" class="rounded-full bg-slate-100 px-3 py-1 font-bold" type="button">×</button>
+      </div>
+      <form id="forgot-form" class="grid gap-3">
+        <input id="forgot-email" class="h-11 rounded-xl border border-slate-200 px-4" placeholder="注册邮箱">
+        <button class="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white" type="submit">发送重置链接</button>
+        <p id="forgot-message" class="min-h-5 text-sm text-slate-500"></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/prompt.js?v=20260513-copy-translate-filter-favorite"></script>
+</body>
+</html>

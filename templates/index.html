@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div
+  class="flex min-h-screen flex-col gap-5 bg-slate-50 md:flex-row"
+  x-data="feedPage({{ next_page }}, {{ 'true' if has_more else 'false' }}, {{ 'true' if current_user.is_admin else 'false' }})"
+  x-init="loadAds()"
+  @scroll.window.throttle.800ms="maybeLoadMore"
+  @post-created.window="prependPost($event.detail.post)"
+>
+  <aside class="hidden w-64 shrink-0 md:block">
+    <div class="sticky top-4 flex h-[calc(100vh-2rem)] flex-col rounded-2xl border border-white/40 bg-white/60 p-4 shadow-sm backdrop-blur-md">
+      <a class="flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-slate-100/50" href="/">
+        <span class="grid h-10 w-10 place-items-center rounded-2xl bg-orange-600 text-sm font-black text-white">M</span>
+        <span>
+          <span class="block text-base font-black tracking-tight text-slate-950">meetseek</span>
+          <span class="text-xs font-bold text-slate-400">AI 社区</span>
+        </span>
+      </a>
+
+      <nav class="mt-6 space-y-1 text-sm font-black text-slate-600">
+        <a class="flex items-center gap-3 rounded-lg bg-orange-50 px-3 py-3 text-orange-600 transition-colors hover:bg-slate-100/50" href="/">
+          <span>🔥</span><span>最新动态</span>
+        </a>
+        <a class="flex items-center gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="https://prompts.meetseek.ai/">
+          <span>✨</span><span>提示词库</span>
+        </a>
+        <a class="flex items-center gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="https://tools.meetseek.ai/">
+          <span>🧰</span><span>AI 工具箱</span>
+        </a>
+        <a class="flex items-center gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="/category/business">
+          <span>💼</span><span>商业变现</span>
+        </a>
+        <a class="flex items-center gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-slate-100/50 hover:text-slate-950" href="/feed.xml">
+          <span>RSS</span><span>订阅更新</span>
+        </a>
+      </nav>
+
+      <div class="mt-6 rounded-2xl border border-white/50 bg-white/50 p-4">
+        <p class="text-xs font-black uppercase tracking-wide text-slate-400">频道</p>
+        <div class="mt-3 grid gap-2 text-sm font-bold text-slate-600">
+          <a class="rounded-lg px-3 py-2 transition-colors hover:bg-slate-100/60" href="/category/general">综合讨论</a>
+          <a class="rounded-lg px-3 py-2 transition-colors hover:bg-slate-100/60" href="/category/prompts">提示词</a>
+          <a class="rounded-lg px-3 py-2 transition-colors hover:bg-slate-100/60" href="/category/tools">AI 工具</a>
+        </div>
+      </div>
+
+      <div class="mt-auto rounded-2xl border border-white/50 bg-white/60 p-4">
+        <p class="text-xs font-black text-slate-400">当前账号</p>
+        <div class="mt-3 flex items-center gap-3">
+          <span class="grid h-10 w-10 place-items-center rounded-full bg-slate-950 text-sm font-black text-white">{{ current_user.name[:1] if current_user and current_user.name else "M" }}</span>
+          <span class="min-w-0">
+            <span class="block truncate text-sm font-black text-slate-950">{{ current_user.name if current_user else "游客" }}</span>
+            <span class="text-xs font-bold text-slate-400">{{ current_user.tier|upper if current_user else "未登录" }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="min-w-0 flex-1">
+    <div class="mx-auto max-w-5xl px-0 md:px-2">
+      <div class="mb-5 flex items-center justify-between px-1">
+        <div>
+          <h1 class="text-3xl font-black tracking-tight text-slate-950">最新动态</h1>
+          <p class="mt-1 text-sm font-bold text-slate-400">短文、长文、工具链接和提示词更新都在这里。</p>
+        </div>
+        <a class="hidden rounded-full bg-white px-4 py-2 text-sm font-black text-slate-500 ring-1 ring-slate-200 transition hover:text-orange-600 sm:inline-flex" href="https://tools.meetseek.ai/">返回工具箱</a>
+      </div>
+
+      <section class="mb-5 overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm" x-data="composer()" x-init="init()">
+        <div class="flex gap-4">
+          <div class="shrink-0">
+            <div class="grid h-12 w-12 place-items-center rounded-full bg-slate-950 text-sm font-black text-white">{{ current_user.name[:1] if current_user and current_user.name else "M" }}</div>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="mb-3 flex flex-wrap items-center gap-2">
+              <button class="rounded-full px-3 py-1.5 text-xs font-black transition" :class="mode === 'short' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-950'" type="button" @click="mode = 'short'">短文</button>
+              <button class="rounded-full px-3 py-1.5 text-xs font-black transition" :class="mode === 'article' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-950'" type="button" @click="mode = 'article'">长文</button>
+              <button class="rounded-full px-3 py-1.5 text-xs font-black transition" :class="mode === 'tool' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-950'" type="button" @click="mode = 'tool'">工具链接</button>
+              <select x-model="category" class="h-8 rounded-full border-0 bg-slate-100 px-3 text-xs font-black text-slate-600 outline-none">
+                <option value="general">综合讨论</option>
+                <option value="prompts">提示词</option>
+                <option value="tools">AI 工具</option>
+                <option value="business">商业变现</option>
+              </select>
+            </div>
+
+            <input
+              x-show="mode !== 'short'"
+              x-cloak
+              x-model="title"
+              class="mb-3 h-12 w-full rounded-2xl border-0 bg-slate-50 px-4 text-sm font-black outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-100"
+              placeholder="给长文或工具链接起一个清楚的标题"
+            >
+            <textarea
+              x-model="content"
+              class="min-h-28 w-full resize-none border-0 bg-transparent text-[17px] font-semibold leading-relaxed text-slate-800 placeholder:text-slate-400 focus:outline-none"
+              placeholder="有什么新鲜事？分享工具、提示词、复盘或一个值得讨论的问题..."
+            ></textarea>
+
+            <div x-show="isParsing" x-cloak class="mt-3 flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-slate-400">
+              <span class="h-2.5 w-2.5 animate-pulse rounded-full bg-orange-500"></span>
+              正在解析链接...
+            </div>
+
+            <template x-if="linkPreview">
+              <a :href="linkPreview.url" target="_blank" rel="nofollow ugc" class="mt-3 flex overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200 transition hover:bg-white">
+                <template x-if="linkPreview.image">
+                  <img class="hidden h-32 w-40 shrink-0 object-cover sm:block" :src="linkPreview.image" :alt="linkPreview.title" loading="lazy">
+                </template>
+                <div class="min-w-0 p-4">
+                  <p class="text-xs font-black text-orange-600" x-text="linkPreview.site_name || 'Link'"></p>
+                  <h3 class="mt-1 line-clamp-2 text-sm font-black" x-text="linkPreview.title"></h3>
+                  <p class="mt-1 line-clamp-2 text-sm leading-relaxed text-slate-500" x-text="linkPreview.description"></p>
+                </div>
+              </a>
+            </template>
+
+            <div x-show="error" x-cloak class="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-black text-rose-600" x-text="error"></div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+          <div class="flex flex-wrap items-center gap-2 text-sm font-black text-blue-600">
+            <button class="rounded-full px-3 py-2 transition hover:bg-blue-50" type="button">图片</button>
+            <button class="rounded-full px-3 py-2 transition hover:bg-blue-50" type="button">视频</button>
+            <button class="rounded-full px-3 py-2 transition hover:bg-blue-50" type="button">GIF</button>
+            <button class="rounded-full px-3 py-2 transition hover:bg-blue-50" type="button">表情</button>
+            <button class="rounded-full bg-slate-50 px-3 py-2 text-slate-600 transition hover:bg-slate-100" type="button" @click="mode = 'article'">文章</button>
+          </div>
+          <button class="rounded-full bg-orange-600 px-7 py-3 text-sm font-black text-white transition hover:bg-orange-700 disabled:bg-slate-300" type="button" :disabled="isPosting || !content.trim()" @click="publish">
+            <span x-show="!isPosting">发布</span>
+            <span x-show="isPosting" x-cloak>发布中...</span>
+          </button>
+        </div>
+      </section>
+
+      <div class="mb-4 flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-3 py-2 shadow-sm">
+        <div class="flex gap-1 text-sm font-black text-slate-500">
+          <button class="rounded-full bg-orange-50 px-4 py-2 text-orange-600">最新</button>
+          <a class="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950" href="/category/general?sort_by=hot">热门</a>
+          <a class="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950" href="/category/prompts">提示词</a>
+          <a class="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950" href="/category/tools">工具</a>
+        </div>
+      </div>
+
+      <div id="home-feed-list">
+        {% for post in posts %}
+        <article class="relative mb-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md" x-data="feedCard({{ post.id }}, {{ post.like_count }}, {{ 'true' if current_user.is_admin else 'false' }}, {{ 'true' if post.is_pinned else 'false' }})" x-show="visible">
+          <button class="absolute right-5 top-5 rounded-full px-3 py-1.5 text-lg font-black leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-950" type="button">...</button>
+          <div class="flex gap-4">
+            <a class="hidden shrink-0 sm:block" href="/u/{{ post.author.name }}">
+              {% if post.author.avatar_url %}
+              <img class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200" src="{{ post.author.avatar_url }}" alt="{{ post.author.name }}" loading="lazy">
+              {% else %}
+              <span class="grid h-11 w-11 place-items-center rounded-full bg-slate-950 text-sm font-black text-white">{{ post.author.name[:1] if post.author.name else "M" }}</span>
+              {% endif %}
+            </a>
+            <div class="min-w-0 flex-1 pr-8">
+              <div class="flex flex-wrap items-center gap-2">
+                <a class="text-sm font-black hover:text-orange-600" href="/u/{{ post.author.name }}">{{ post.author.name }}</a>
+                <span class="text-sm font-bold text-slate-400">{{ post.published_at[:10] if post.published_at else "" }}</span>
+                {% if post.is_pinned %}
+                <span class="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-black text-orange-600">置顶</span>
+                {% endif %}
+                <a class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-500 hover:text-orange-600" href="/category/{{ post.category }}">{{ post.category }}</a>
+              </div>
+
+              <a href="{{ post.url }}" class="mt-3 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+                <div class="min-w-0">
+                  {% if post.type != "short" %}
+                  <h2 class="text-xl font-black leading-snug text-slate-950 hover:text-orange-600">{{ post.title }}</h2>
+                  {% endif %}
+                  <p class="{% if post.type != 'short' %}mt-2{% endif %} line-clamp-4 whitespace-pre-line text-[15px] leading-7 text-slate-500">{{ post.summary[:100] }}{% if post.summary|length > 100 %}...{% endif %}</p>
+                </div>
+                {% if post.cover_image_url %}
+                <img class="h-32 w-32 rounded-xl object-cover ring-1 ring-slate-100" src="{{ post.cover_image_url }}" alt="{{ post.title }}" loading="lazy">
+                {% endif %}
+              </a>
+
+              {% if post.link_preview %}
+              <a href="{{ post.link_preview.url }}" rel="nofollow ugc" target="_blank" class="mt-4 flex overflow-hidden rounded-xl bg-slate-50 ring-1 ring-slate-200 transition hover:bg-white">
+                {% if post.link_preview.image %}
+                <img class="hidden h-28 w-36 shrink-0 object-cover sm:block" src="{{ post.link_preview.image }}" alt="{{ post.link_preview.title }}" loading="lazy">
+                {% endif %}
+                <div class="min-w-0 p-4">
+                  <p class="text-xs font-black text-orange-600">{{ post.link_preview.site_name }}</p>
+                  <h3 class="mt-1 line-clamp-2 text-sm font-black">{{ post.link_preview.title }}</h3>
+                  <p class="mt-1 line-clamp-2 text-sm leading-relaxed text-slate-500">{{ post.link_preview.description }}</p>
+                </div>
+              </a>
+              {% endif %}
+
+              <div class="mt-4 flex flex-wrap items-center gap-x-8 gap-y-2 text-sm font-bold text-slate-500">
+                <button class="rounded-full py-2 transition hover:text-orange-600" :class="liked ? 'text-rose-600' : ''" type="button" @click="like">赞 <span x-text="likeCount">{{ post.like_count }}</span></button>
+                <a class="rounded-full py-2 transition hover:text-orange-600" href="{{ post.url }}">评论 {{ post.comment_count }}</a>
+                <button class="rounded-full py-2 transition hover:text-orange-600" type="button">收藏</button>
+                <a class="rounded-full py-2 transition hover:text-orange-600" href="{{ post.url }}">分享</a>
+                {% if current_user.is_admin %}
+                <button class="rounded-full py-2 text-slate-400 transition hover:text-orange-600" type="button" @click="adminAction(isPinned ? 'unpin' : 'pin')" x-text="isPinned ? '取消置顶' : '置顶'"></button>
+                <button class="rounded-full py-2 text-slate-400 transition hover:text-rose-600" type="button" @click="adminAction('delete')">删除</button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </article>
+
+        {% if loop.index == 4 or loop.index == 8 %}
+        <template x-if="adForSlot({{ loop.index }})">
+          <aside class="mb-4 rounded-2xl border border-orange-100 bg-orange-50/70 p-5 shadow-sm">
+            <div class="mb-3 flex items-center justify-between">
+              <span class="text-xs font-black uppercase tracking-wide text-orange-500">Ad</span>
+              <span class="rounded-full bg-white/80 px-2 py-1 text-xs font-black text-slate-400">赞助</span>
+            </div>
+            <div class="prose prose-slate max-w-none text-sm prose-a:font-black prose-a:text-orange-600" x-html="adForSlot({{ loop.index }}).html_content"></div>
+          </aside>
+        </template>
+        {% endif %}
+        {% endfor %}
+
+        <template x-for="post in items" :key="post.id">
+          <article class="relative mb-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md" x-data="feedCard(post.id, post.like_count || 0, isAdmin, post.is_pinned)" x-show="visible">
+            <button class="absolute right-5 top-5 rounded-full px-3 py-1.5 text-lg font-black leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-950" type="button">...</button>
+            <div class="flex gap-4">
+              <a class="hidden shrink-0 sm:block" :href="`/u/${post.author?.name || 'meetseek'}`">
+                <template x-if="post.author && post.author.avatar_url">
+                  <img class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200" :src="post.author.avatar_url" :alt="post.author.name" loading="lazy">
+                </template>
+                <template x-if="!post.author || !post.author.avatar_url">
+                  <span class="grid h-11 w-11 place-items-center rounded-full bg-slate-950 text-sm font-black text-white" x-text="firstLetter(post.author?.name || 'M')"></span>
+                </template>
+              </a>
+              <div class="min-w-0 flex-1 pr-8">
+                <div class="flex flex-wrap items-center gap-2">
+                  <a class="text-sm font-black hover:text-orange-600" :href="`/u/${post.author?.name || 'meetseek'}`" x-text="post.author?.name || 'meetseek'"></a>
+                  <span class="text-sm font-bold text-slate-400" x-text="formatDate(post.published_at || post.created_at)"></span>
+                  <span x-show="post.is_pinned" x-cloak class="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-black text-orange-600">置顶</span>
+                  <a class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-500 hover:text-orange-600" :href="`/category/${post.category || 'general'}`" x-text="post.category || 'general'"></a>
+                </div>
+                <a :href="post.url || '#'" class="mt-3 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+                  <div class="min-w-0">
+                    <h2 x-show="post.type !== 'short'" x-cloak class="text-xl font-black leading-snug text-slate-950 hover:text-orange-600" x-text="post.title"></h2>
+                    <p class="line-clamp-4 whitespace-pre-line text-[15px] leading-7 text-slate-500" :class="post.type !== 'short' ? 'mt-2' : ''" x-text="excerpt(post.summary || post.content || post.title)"></p>
+                  </div>
+                  <template x-if="post.cover_image_url">
+                    <img class="h-32 w-32 rounded-xl object-cover ring-1 ring-slate-100" :src="post.cover_image_url" :alt="post.title" loading="lazy">
+                  </template>
+                </a>
+                <template x-if="post.link_preview">
+                  <a :href="post.link_preview.url" rel="nofollow ugc" target="_blank" class="mt-4 flex overflow-hidden rounded-xl bg-slate-50 ring-1 ring-slate-200 transition hover:bg-white">
+                    <template x-if="post.link_preview.image">
+                      <img class="hidden h-28 w-36 shrink-0 object-cover sm:block" :src="post.link_preview.image" :alt="post.link_preview.title" loading="lazy">
+                    </template>
+                    <div class="min-w-0 p-4">
+                      <p class="text-xs font-black text-orange-600" x-text="post.link_preview.site_name || 'Link'"></p>
+                      <h3 class="mt-1 line-clamp-2 text-sm font-black" x-text="post.link_preview.title"></h3>
+                      <p class="mt-1 line-clamp-2 text-sm leading-relaxed text-slate-500" x-text="post.link_preview.description"></p>
+                    </div>
+                  </a>
+                </template>
+                <div class="mt-4 flex flex-wrap items-center gap-x-8 gap-y-2 text-sm font-bold text-slate-500">
+                  <button class="rounded-full py-2 transition hover:text-orange-600" :class="liked ? 'text-rose-600' : ''" type="button" @click="like">赞 <span x-text="likeCount"></span></button>
+                  <a class="rounded-full py-2 transition hover:text-orange-600" :href="post.url || '#'">评论 <span x-text="post.comment_count || 0"></span></a>
+                  <button class="rounded-full py-2 transition hover:text-orange-600" type="button">收藏</button>
+                  <a class="rounded-full py-2 transition hover:text-orange-600" :href="post.url || '#'">分享</a>
+                  <button x-show="isAdmin" x-cloak class="rounded-full py-2 text-slate-400 transition hover:text-orange-600" type="button" @click="adminAction(isPinned ? 'unpin' : 'pin')" x-text="isPinned ? '取消置顶' : '置顶'"></button>
+                  <button x-show="isAdmin" x-cloak class="rounded-full py-2 text-slate-400 transition hover:text-rose-600" type="button" @click="adminAction('delete')">删除</button>
+                </div>
+              </div>
+            </div>
+          </article>
+        </template>
+      </div>
+
+      <div class="mt-6 flex justify-center pb-10">
+        <button class="rounded-full bg-slate-950 px-6 py-3 text-sm font-black text-white transition hover:bg-orange-600 disabled:bg-slate-300" x-show="hasMore" :disabled="isLoading" @click="loadMore">
+          <span x-show="!isLoading">加载更多</span>
+          <span x-show="isLoading" x-cloak>加载中...</span>
+        </button>
+        <p class="text-sm font-bold text-slate-400" x-show="!hasMore" x-cloak>已经到底了</p>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ request.state.csp_nonce }}">
+  function firstUrl(text) {
+    const match = (text || '').match(/https?:\/\/[^\s<>'"]+/i);
+    return match ? match[0] : '';
+  }
+
+  function firstLetter(value) {
+    return (value || 'M').trim().slice(0, 1).toUpperCase();
+  }
+
+  function formatDate(value) {
+    if (!value) return '';
+    return String(value).slice(0, 10);
+  }
+
+  function excerpt(value) {
+    const text = String(value || '');
+    return text.length > 100 ? `${text.slice(0, 100)}...` : text;
+  }
+
+  function composer() {
+    return {
+      mode: 'short',
+      title: '',
+      content: '',
+      category: 'general',
+      error: '',
+      isPosting: false,
+      isParsing: false,
+      lastUrl: '',
+      linkPreview: null,
+      init() {
+        this.$watch('content', (value) => this.detectUrl(value));
+      },
+      async detectUrl(value) {
+        const url = firstUrl(value);
+        if (!url || url === this.lastUrl) return;
+        this.lastUrl = url;
+        this.isParsing = true;
+        try {
+          const response = await fetch('/api/parse-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+          });
+          const data = await response.json();
+          if (response.ok) this.linkPreview = data;
+        } catch (_) {
+        } finally {
+          this.isParsing = false;
+        }
+      },
+      async publish() {
+        if (!this.content.trim() || this.isPosting) return;
+        this.error = '';
+        this.isPosting = true;
+        try {
+          const response = await fetch('/api/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: this.mode,
+              title: this.mode === 'short' ? null : this.title,
+              content: this.content,
+              category: this.category,
+              link_preview: this.linkPreview
+            })
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.detail || '发布失败');
+          const post = data.post || data;
+          window.dispatchEvent(new CustomEvent('post-created', { detail: { post } }));
+          this.title = '';
+          this.content = '';
+          this.linkPreview = null;
+          this.lastUrl = '';
+          this.mode = 'short';
+        } catch (error) {
+          this.error = error.message || '发布失败';
+        } finally {
+          this.isPosting = false;
+        }
+      }
+    }
+  }
+
+  function feedPage(nextPage, hasMore, isAdmin) {
+    return {
+      items: [],
+      ads: {},
+      page: nextPage,
+      hasMore,
+      isAdmin,
+      isLoading: false,
+      prependPost(post) {
+        if (!post) return;
+        this.items.unshift(post);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      async loadAds() {
+        try {
+          const response = await fetch('/api/ads?location=feed_insert');
+          const data = await response.json();
+          if (!response.ok) return;
+          data.ads.slice(0, 2).forEach((ad, index) => {
+            this.ads[index === 0 ? 4 : 8] = ad;
+          });
+        } catch (_) {}
+      },
+      adForSlot(position) {
+        return this.ads[position] || null;
+      },
+      async loadMore() {
+        if (this.isLoading || !this.hasMore) return;
+        this.isLoading = true;
+        try {
+          const response = await fetch(`/api/feed?page=${this.page}`);
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.detail || '加载失败');
+          this.items.push(...data.items);
+          this.hasMore = data.has_more;
+          this.page += 1;
+        } finally {
+          this.isLoading = false;
+        }
+      },
+      maybeLoadMore() {
+        const nearBottom = window.innerHeight + window.scrollY > document.body.offsetHeight - 700;
+        if (nearBottom) this.loadMore();
+      }
+    }
+  }
+
+  function feedCard(postId, count, isAdmin, pinned) {
+    return {
+      visible: true,
+      isAdmin,
+      isPinned: pinned,
+      liked: false,
+      likeCount: count,
+      async like() {
+        const nextLiked = !this.liked;
+        this.liked = nextLiked;
+        this.likeCount += nextLiked ? 1 : -1;
+        try {
+          const response = await fetch('/api/like', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ post_id: postId })
+          });
+          if (response.ok) {
+            const data = await response.json();
+            this.likeCount = data.like_count;
+          }
+        } catch (_) {}
+      },
+      async adminAction(action) {
+        if (!this.isAdmin) return;
+        const response = await fetch(`/api/admin/posts/${postId}/action`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action })
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (action === 'delete' || action === 'hide') this.visible = false;
+        if (action === 'pin' || action === 'unpin') this.isPinned = data.is_pinned;
+      }
+    }
+  }
+</script>
+{% endblock %}
